@@ -111,7 +111,17 @@ INSTRUCCIONES CRITICAS - LEE CON ATENCION:
 
 {sources_instruction}
 
-ESTILO: Profesional, amigable, espanol de Costa Rica, maximo 3 parrafos"""
+DETECCION DE IDIOMA Y TRADUCCION AUTOMATICA:
+- SIEMPRE detecta el idioma en el que el usuario te escribe
+- Responde EN EL MISMO IDIOMA que el usuario esta usando
+- Si el usuario escribe en español → responde en español (estilo costarricense, profesional, amigable)
+- Si el usuario escribe en inglés → responde en inglés (profesional, amigable)
+- Si el usuario escribe en portugués → responde en portugués
+- Si los documentos internos o información web están en español pero el usuario pregunta en inglés, TRADUCE la información al inglés de forma natural
+- Si los documentos internos o información web están en inglés pero el usuario pregunta en español, TRADUCE la información al español de forma natural
+- Mantén conversación natural en el idioma detectado
+- Máximo 3 párrafos por respuesta
+- NO menciones que estás traduciendo, hazlo de forma transparente"""
         
         messages = [{"role": "system", "content": system_prompt}]
         

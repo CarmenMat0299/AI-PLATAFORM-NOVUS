@@ -11,7 +11,7 @@ from src.services.azure_vision_service import AzureVisionService
 from src.services.azure_speech_service import AzureSpeechService
 from src.utils.faq_handler import check_faq
 from fastapi import Request, Response
-from src.services.teams_service import teams_service  # ← CORRECCIÓN AQUÍ
+from src.services.teams_service import teams_service  
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

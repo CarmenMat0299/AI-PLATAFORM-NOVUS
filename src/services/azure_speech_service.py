@@ -18,11 +18,11 @@ class AzureSpeechService:
         # Obtener región directamente del Key Vault
         try:
             region = kv.get_secret('AzureAIRegion')
-            logger.info(f"✅ Región obtenida del Key Vault: {region}")
+            logger.info(f" Región obtenida del Key Vault: {region}")
         except:
             # Fallback a eastus2 si no existe
             region = "eastus2"
-            logger.warning(f"⚠️ AzureAIRegion no encontrado, usando fallback: {region}")
+            logger.warning(f" AzureAIRegion no encontrado, usando fallback: {region}")
         
         logger.info(f"Speech Service inicializando con región: {region}")
         

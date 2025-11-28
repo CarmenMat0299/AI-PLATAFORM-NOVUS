@@ -16,3 +16,4 @@ azure-cognitiveservices-speech==1.40.0
 azure-keyvault-secrets==4.7.0
 botbuilder-core==4.15.0
 botbuilder-schema==4.15.0
+requests>=2.31.0

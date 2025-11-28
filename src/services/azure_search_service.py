@@ -19,11 +19,11 @@ class AzureSearchService:
             self.index_name = os.getenv('AZURE_SEARCH_INDEX_NAME', 'novus-knowledge-base')
             
             if not self.endpoint or not self.key:
-                logger.warning("⚠️ Azure Search no configurado")
-                self.enabled = False  # ← AGREGAR ESTO
+                logger.warning("Azure Search no configurado")
+                self.enabled = False  
                 return
             
-            logger.info("✅ Credenciales de Azure Search desde Key Vault")
+            logger.info("Credenciales de Azure Search desde Key Vault")
             
             self.credential = AzureKeyCredential(self.key)
             
@@ -38,11 +38,11 @@ class AzureSearchService:
                 credential=self.credential
             )
             
-            self.enabled = True  # ← AGREGAR ESTO
+            self.enabled = True  
             
         except Exception as e:
-            logger.error(f"❌ Error inicializando Azure Search: {e}")
-            self.enabled = False  # ← AGREGAR ESTO
+            logger.error(f" Error inicializando Azure Search: {e}")
+            self.enabled = False  
     
     def create_index(self):
         if not self.enabled:
