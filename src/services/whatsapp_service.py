@@ -76,7 +76,7 @@ class WhatsAppService:
         2. GET el contenido desde la URL obtenida
         """
         try:
-            logger.info(f"📥 Descargando media ID: {media_id}")
+            logger.info(f" Descargando media ID: {media_id}")
             
             # PASO 1: Obtener URL del media
             media_url_endpoint = f"{self.base_url}/{media_id}"

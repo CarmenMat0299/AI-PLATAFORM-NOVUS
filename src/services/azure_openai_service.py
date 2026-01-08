@@ -1,10 +1,15 @@
 import os
 import logging
+import json
 from openai import AsyncAzureOpenAI
 from dotenv import load_dotenv
 from src.services.azure_search_service import AzureSearchService
 from src.services.web_search_service import WebSearchService
 from .keyvault_service import KeyVaultService
+
+# Importar las herramientas disponibles
+from src.services.novus_website_tool import NovusWebsiteTool
+from src.services.meeting_scheduler_tool import MeetingSchedulerTool
 
 load_dotenv()
 
@@ -17,112 +22,196 @@ class AzureOpenAIService:
         self.client = AsyncAzureOpenAI(
             azure_endpoint=kv.get_secret('AzureOpenAIEndpoint'),
             api_key=kv.get_secret('AzureOpenAIKey'),
-            api_version=os.getenv('AZURE_OPENAI_API_VERSION')
+            api_version=os.getenv('AZURE_OPENAI_API_VERSION') or '2024-02-15-preview'
+            
         )
         self.deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT_GPT4')
         self.search_service = AzureSearchService()
         self.web_service = WebSearchService()
+        
+        # Definir herramientas disponibles para function calling
+        self.tools = [
+            NovusWebsiteTool.get_tool_definition(),
+            MeetingSchedulerTool.get_tool_definition()
+        ]
+        
+        logger.info("JulIA - Azure OpenAI Service inicializado con 2 herramientas: sitio web + agenda")
     
-    async def generate_response(self, user_message: str, conversation_history: list = None):
-        """Genera respuesta usando GPT-4"""
+    async def generate_response(self, user_message: str, conversation_history: list = None, channel: str = "whatsapp"):
+        """
+        Genera respuesta con IA
         
-        logger.info(f"Mensaje del usuario: {user_message}")
+        Args:
+            user_message: Mensaje del usuario
+            conversation_history: Historial de conversación
+            channel: Canal de comunicación ('whatsapp' para clientes, 'teams' para colaboradores)
+        """
+        logger.info(f"[{channel.upper()}] Mensaje del usuario: {user_message}")
         
-        # NUEVO: Detectar si pide fuentes
         include_sources = self._user_wants_sources(user_message)
         logger.info(f"Usuario solicita fuentes: {include_sources}")
         
-        # 1. Buscar en documentos internos
+        # Buscar en documentos internos
         internal_docs = []
         if self.search_service and self.search_service.enabled:
             internal_docs = self.search_service.search(user_message, top=3)
             logger.info(f"Documentos internos encontrados: {len(internal_docs)}")
-        else:
-            logger.info("Azure Search deshabilitado - sin búsqueda en docs internos")
         
-        # 2. Determinar si necesita búsqueda web
+        # Buscar en web si es necesario
         needs_web = self._should_search_web(user_message)
-        logger.info(f"Necesita busqueda web: {needs_web}")
+        logger.info(f"Necesita búsqueda web: {needs_web}")
         
         web_results = []
-        
         if needs_web:
             try:
-                # 3. Buscar en la web
                 web_results = await self.web_service.search_web(user_message, num_results=3)
                 logger.info(f"Resultados web encontrados: {len(web_results)}")
-                
-                if web_results:
-                    logger.info(f"Primeros titulos: {[r['title'][:50] for r in web_results[:2]]}")
             except Exception as e:
-                logger.error(f"Error en busqueda web: {e}")
+                logger.error(f"Error en búsqueda web: {e}")
         
-        # 4. Construir contexto combinado (ahora con flag de fuentes)
-        context = self._build_combined_context(internal_docs, web_results, include_sources)
-        logger.info(f"Contexto construido: {len(context)} caracteres")
+        # Construir contexto inicial
+        context = self._build_combined_context(internal_docs, web_results, None, include_sources)
         
-        # Log del inicio del contexto para ver si tiene info web
-        if "INFORMACION DE INTERNET" in context:
-            logger.info("Contexto incluye informacion de INTERNET")
-        else:
-            logger.warning("Contexto NO incluye informacion de internet")
-        
-        # 5. Prompt mejorado con instrucciones sobre fuentes
         sources_instruction = self._get_sources_instruction(include_sources)
         
-        system_prompt = f"""Eres el asistente virtual de Novus Soluciones S.A., empresa costarricense de tecnologia.
-
-INFORMACION BASICA DE NOVUS (usala SOLO cuando pregunten especificamente por Novus):
-- Nombre: Novus Soluciones S.A.
-- Ubicacion: Costa Rica
-- Servicios: Soluciones de TI, desarrollo de software, consultoria tecnologica
-- Email: info@novuscr.com
+        # SYSTEM PROMPT ADAPTADO SEGÚN EL CANAL
+        if channel == "whatsapp":
+            # PROMPT PARA CLIENTES (WhatsApp) - Más formal y completo
+            system_prompt = f"""Eres JulIA, la asistente virtual profesional de Novus Soluciones S.A.
 
 {context}
 
-TUS CAPACIDADES MULTIMEDIA - LEE CON ATENCION:
+TU PERSONALIDAD (Cliente Externo):
+- Eres profesional, amigable y servicial
+- Usas un tono formal pero cálido
+- Das respuestas COMPLETAS y DETALLADAS (4-6 párrafos cuando sea apropiado)
+- Explicas todo claramente como si hablaras con un cliente valioso
+- Muestras experticia y conocimiento profundo
 
-AUDIO:
-- Cuando un usuario envia un audio por WhatsApp, el sistema lo transcribe AUTOMATICAMENTE usando Azure Speech Service
-- Tu recibes el mensaje YA TRANSCRITO como texto normal
-- El usuario vera: "Escuche: '[transcripcion]'" seguido de tu respuesta
-- NUNCA digas "no puedo procesar audio" o "no tengo capacidad de escuchar audio"
-- Simplemente responde al contenido transcrito como si fuera un mensaje de texto normal
+HERRAMIENTAS DISPONIBLES:
+- "get_novus_info": Consulta el sitio web oficial de Novus para información actualizada
+  * Usa query_type="servicios" para servicios, productos, soluciones
+  * Usa query_type="contacto" para teléfono, email, dirección, horarios
+  * Usa query_type="general" para info general de la empresa
+  * Usa query_type="blog" para artículos y noticias
+  * Usa query_type="todo" para obtener toda la información disponible
+  
+- "schedule_meeting": Agenda reuniones con el equipo de Novus
+  * Úsala cuando el cliente quiera agendar cita, reunión, llamada, consulta, demo
 
-IMAGENES:
-- Cuando un usuario envia una imagen, el sistema la analiza AUTOMATICAMENTE usando Azure Vision
-- Tu recibiras la descripcion y texto extraido de la imagen
-- Responde basandote en esa informacion como si hubieras visto la imagen
-- NUNCA digas "no puedo ver imagenes" o "no puedo analizar imagenes"
-
-INSTRUCCIONES CRITICAS - LEE CON ATENCION:
-1. IDENTIFICA LA EMPRESA EN LA PREGUNTA:
-   - Si preguntan por "Walmart", "Banco Nacional", etc. → NO es Novus
-   - Si preguntan por "su horario", "ustedes", "su empresa" → ES Novus
+CUÁNDO USAR LAS HERRAMIENTAS:
+ SIEMPRE usa "get_novus_info" cuando pregunten sobre:
+   - Qué servicios ofrece Novus
+   - Información de productos o soluciones
+   - Datos de contacto, horarios, ubicación
+   - Cualquier información de la empresa
    
-2. SI LA PREGUNTA NO ES SOBRE NOVUS:
-   - USA UNICAMENTE la informacion de la seccion "INFORMACION DE INTERNET"
-   - NUNCA uses el horario de Novus para responder sobre otra empresa
-   - Si no hay informacion web, di: "No tengo informacion sobre el horario de [empresa]. Te gustaria que busque otra cosa?"
+ SIEMPRE usa "schedule_meeting" cuando el cliente:
+   - Quiera agendar una cita
+   - Solicite una reunión
+   - Pida hablar con alguien
+   - Quiera una demo o consulta
 
-3. SI LA PREGUNTA ES SOBRE NOVUS:
-   - Puedes usar la informacion basica de arriba
-   - Preferiblemente usa informacion de internet si esta disponible (es mas actualizada)
+IMPORTANTE SOBRE SERVICIOS:
+- TODA la información de servicios DEBE venir del sitio web usando get_novus_info
+- NO inventes servicios o características
+- Si no estás segura, usa la herramienta para verificar
+- Menciona detalles específicos que encuentres en el sitio
 
-{sources_instruction}
+TUS CAPACIDADES:
 
-DETECCION DE IDIOMA Y TRADUCCION AUTOMATICA:
-- SIEMPRE detecta el idioma en el que el usuario te escribe
-- Responde EN EL MISMO IDIOMA que el usuario esta usando
-- Si el usuario escribe en español → responde en español (estilo costarricense, profesional, amigable)
-- Si el usuario escribe en inglés → responde en inglés (profesional, amigable)
-- Si el usuario escribe en portugués → responde en portugués
-- Si los documentos internos o información web están en español pero el usuario pregunta en inglés, TRADUCE la información al inglés de forma natural
-- Si los documentos internos o información web están en inglés pero el usuario pregunta en español, TRADUCE la información al español de forma natural
-- Mantén conversación natural en el idioma detectado
-- Máximo 3 párrafos por respuesta
-- NO menciones que estás traduciendo, hazlo de forma transparente"""
+AUDIO (WhatsApp):
+- Los audios se transcriben automáticamente
+- Recibes el texto ya transcrito
+- El usuario verá: "Escuché: '[transcripción]'" seguido de tu respuesta
+- NUNCA digas "no puedo procesar audio"
+- Responde al contenido normalmente
+
+IMÁGENES:
+- Puedes ver y analizar imágenes que te envíen
+- Extrae texto de documentos, capturas, fotos
+- Describe lo que ves con detalle
+- Analiza gráficos, tablas, diagramas
+- NUNCA digas "no puedo ver imágenes"
+
+INFORMACIÓN BÁSICA DE NOVUS:
+- Email: info@novuscr.com
+- Sitio web: www.novuscr.com
+- Horario: Lunes a viernes, 8:00 AM - 5:00 PM (hora de Costa Rica)
+- Somos una empresa costarricense especializada en soluciones tecnológicas
+
+ESTILO DE RESPUESTA PARA CLIENTES:
+- Da respuestas COMPLETAS de 4-6 párrafos para preguntas importantes
+- Explica con detalle y profesionalismo
+- Menciona beneficios y ventajas concretas
+- Invita a la acción (agendar reunión, solicitar demo, etc.)
+- Sé específica con información técnica cuando sea relevante
+- Usa ejemplos concretos del sitio web
+- Cita características y detalles reales que encuentres
+
+FLUJO DE CONVERSACIÓN:
+1. Si preguntan sobre servicios → Usa get_novus_info con query_type="servicios"
+2. Presenta la información completa y detallada
+3. Al final, ofrece proactivamente agendar una reunión
+4. Si aceptan, usa schedule_meeting
+
+IMPORTANTE:
+- SIEMPRE usa las herramientas cuando sea apropiado
+- Prefiere información del sitio web sobre tu conocimiento general
+- Responde en el mismo idioma del usuario (principalmente español)
+- Sé detallada y no tengas miedo de escribir respuestas largas
+- Proyecta experticia basada en información REAL del sitio
+
+{sources_instruction}"""
         
+        else:  # channel == "teams"
+            # PROMPT PARA COLABORADORES (Teams) - Más técnico y casual
+            system_prompt = f"""Eres JulIA, la asistente IA interna de Novus Soluciones S.A.
+
+{context}
+
+TU PERSONALIDAD (Colaborador Interno):
+- Eres técnica, directa y eficiente
+- Usas un tono casual y cercano (compañera de equipo)
+- Das respuestas COMPLETAS y TÉCNICAS (4-6 párrafos cuando sea necesario)
+- Puedes usar jerga técnica - asumes que hablas con developers/IT
+- Eres más informal pero igual de completa
+
+HERRAMIENTAS DISPONIBLES:
+- "get_novus_info": Info del sitio web de Novus (para referencias)
+- "schedule_meeting": Agendar reuniones internas
+
+TUS CAPACIDADES:
+
+IMÁGENES:
+- Análisis visual completo
+- OCR y extracción de texto
+- Análisis de código en capturas
+- Diagramas y arquitecturas
+- NUNCA digas "no puedo ver imágenes"
+
+INFORMACIÓN DE NOVUS:
+- Email: info@novuscr.com
+- Web: novuscr.com
+- Horario: 8:00 AM - 5:00 PM (Lunes-Viernes, hora CR)
+
+ESTILO PARA COLABORADORES:
+- Respuestas técnicas y directas
+- Puedes ser más casual ("Hey", "Dale", etc.)
+- Da contexto técnico profundo cuando sea relevante
+- Menciona stacks, arquitecturas, best practices
+- Respuestas de 4-6 párrafos para temas complejos
+- Sé específica con detalles de implementación
+
+IMPORTANTE:
+- Usa las herramientas cuando necesites info actualizada del sitio
+- Sé técnica y detallada
+- Responde en español (el idioma del equipo)
+- No tengas miedo de dar respuestas largas y completas
+
+{sources_instruction}"""
+        
+        # Preparar mensajes
         messages = [{"role": "system", "content": system_prompt}]
         
         if conversation_history:
@@ -130,163 +219,169 @@ DETECCION DE IDIOMA Y TRADUCCION AUTOMATICA:
         
         messages.append({"role": "user", "content": user_message})
         
-        logger.info(f"Enviando {len(messages)} mensajes a GPT-4")
+        logger.info(f"🤖 Enviando mensaje a GPT-4 con function calling ({len(self.tools)} herramientas)...")
         
+        # Primera llamada a GPT-4 con tools habilitados
         response = await self.client.chat.completions.create(
             model=self.deployment,
             messages=messages,
-            max_tokens=400,
-            temperature=0.4
+            tools=self.tools,
+            tool_choice="auto",  # El modelo decide si usar herramientas
+            max_tokens=1500,  # Aumentado para respuestas más largas
+            temperature=0.7
         )
         
-        bot_response = response.choices[0].message.content
-        logger.info(f"Respuesta generada: {len(bot_response)} caracteres")
+        response_message = response.choices[0].message
+        
+        # Verificar si el modelo quiere usar una herramienta
+        if response_message.tool_calls:
+            logger.info(f"🔧 GPT-4 quiere usar {len(response_message.tool_calls)} herramienta(s)...")
+            
+            # Agregar respuesta del asistente al historial
+            messages.append(response_message)
+            
+            # Procesar cada tool call
+            for tool_call in response_message.tool_calls:
+                function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+                
+                logger.info(f"   └─ Ejecutando: {function_name}({function_args})")
+                
+                # Ejecutar la herramienta correspondiente
+                if function_name == "get_novus_info":
+                    function_response = NovusWebsiteTool.execute(function_args)
+                elif function_name == "schedule_meeting":
+                    function_response = MeetingSchedulerTool.execute(function_args)
+                else:
+                    function_response = {"error": f"Función desconocida: {function_name}"}
+                
+                logger.info(f"      ✓ Resultado: {function_response.get('success', 'N/A')}")
+                
+                # Agregar resultado de la herramienta al historial
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(function_response, ensure_ascii=False)
+                })
+            
+            # Obtener respuesta final del modelo con los resultados de las herramientas
+            logger.info(f"🤖 Generando respuesta final con los datos obtenidos del sitio web...")
+            final_response = await self.client.chat.completions.create(
+                model=self.deployment,
+                messages=messages,
+                max_tokens=1500,  # Respuestas largas
+                temperature=0.7
+            )
+            
+            bot_response = final_response.choices[0].message.content
+        else:
+            # Respuesta directa sin usar herramientas
+            bot_response = response_message.content
+        
+        logger.info(f"✅ Respuesta generada: {len(bot_response)} caracteres")
         
         return bot_response
     
     def _user_wants_sources(self, message: str):
-        """Detectar si el usuario solicita fuentes o referencias"""
         message_lower = message.lower()
         
         source_keywords = [
             "fuente", "fuentes", "referencia", "referencias",
-            "de donde", "segun quien", "segun que",
-            "cita la fuente", "incluye fuentes", "con fuentes",
-            "link", "enlaces", "url", "articulo", "pagina",
-            "dame la fuente", "muestra la fuente", "proporciona fuentes",
-            "dame las fuentes", "muestra las fuentes", "proporciona las fuentes"
+            "de donde", "segun quien",
+            "link", "url"
         ]
         
         return any(keyword in message_lower for keyword in source_keywords)
     
     def _get_sources_instruction(self, include_sources: bool):
-        """Generar instruccion sobre manejo de fuentes"""
         if include_sources:
             return """
-4. INSTRUCCIONES SOBRE FUENTES (EL USUARIO LAS SOLICITO):
-   - SIEMPRE menciona las fuentes al final de tu respuesta
-   - Formato: "Fuentes: [Titulo/URL]" 
-   - Si usaste informacion web, incluye los enlaces
-   - Si usaste documentos internos, menciona "Base de conocimientos de Novus"
-   - Ejemplo: "Fuentes: Walmart Costa Rica (www.walmart.cr), Base de conocimientos de Novus"
+FUENTES (el usuario las solicitó):
+- Menciona las fuentes al final
+- Formato: "Fuentes: [Título/URL]"
+- Ejemplo: "Fuentes: Sitio oficial (novuscr.com)"
 """
         else:
             return """
-4. INSTRUCCIONES SOBRE FUENTES (EL USUARIO NO LAS SOLICITO):
-   - NO menciones las fuentes a menos que sea absolutamente necesario para la credibilidad
-   - Responde de manera natural y directa
-   - Solo si la informacion es muy especifica o controversial, puedes decir "segun informacion actualizada" sin dar detalles
-   - NO incluyas URLs ni titulos de fuentes al final
+FUENTES (el usuario NO las solicitó):
+- NO menciones las fuentes explícitamente
+- Responde de manera natural integrando la información
 """
     
     def _should_search_web(self, message: str):
-        """Determinar si necesita busqueda en internet - MEJORADO"""
         message_lower = message.lower()
         
-        # Si menciona "novus" pero pide buscar en web explicitamente
-        if any(word in message_lower for word in ["busca", "buscar", "busqueda", "en internet", "en la web", "online"]):
-            return True
+        # NO buscar en web si pregunta sobre Novus (usará la herramienta)
+        if any(word in message_lower for word in ['novus', 'nuestra empresa', 'ustedes', 'julia']):
+            if any(word in message_lower for word in ["busca en internet", "buscar en la web"]):
+                return True
+            return False
         
-        # Si pregunta por OTRA empresa (no Novus)
         other_company_indicators = [
-            "horario de", "hora de", "telefono de", "direccion de",
-            "ubicacion de", "contacto de", "email de", "donde queda",
-            "donde esta", "como llegar"
+            "horario de", "telefono de", "direccion de",
+            "donde queda", "donde esta"
         ]
         
         for indicator in other_company_indicators:
-            if indicator in message_lower and "novus" not in message_lower:
-                return True  # Es sobre otra empresa, buscar en web
+            if indicator in message_lower:
+                return True
         
-        # Palabras que indican necesidad de informacion actual
         web_triggers = [
-            "noticias", "actualidad", "hoy", "ayer", "esta semana",
-            "precio actual", "ultimo", "ultima", "reciente", "tendencia",
-            "que es", "quien es", "como funciona", "definicion de",
-            "clima", "tiempo", "temperatura",
-            "cotizacion", "tipo de cambio", "dolar"
+            "noticias", "actualidad", "hoy",
+            "que es", "quien es",
+            "clima", "temperatura"
         ]
         
-        # Empresas externas comunes en Costa Rica
         external_companies = [
-            "microsoft", "google", "amazon", "apple", "meta", "facebook",
-            "openai", "anthropic", "tesla", "nvidia", "walmart", "mcdonalds",
-            "banco", "bac", "nacional", "popular", "scotiabank",
-            "automercado", "mas x menos", "pricesmart", "pequeño mundo"
+            "microsoft", "google", "walmart", "banco"
         ]
         
-        # Buscar triggers
         for trigger in web_triggers:
             if trigger in message_lower:
                 return True
         
-        # Buscar empresas externas
         for company in external_companies:
             if company in message_lower:
                 return True
         
-        # Si pregunta algo general (no especifico de Novus)
-        if "?" in message and "novus" not in message_lower:
-            # Probablemente es una pregunta general
-            return True
-        
         return False
     
-    def _build_combined_context(self, internal_docs, web_results, include_sources=False):
-        """Construir contexto combinando ambas fuentes - MEJORADO"""
+    def _build_combined_context(self, internal_docs, web_results, novus_data=None, include_sources=False):
         context = ""
         
-        # Agregar resultados web PRIMERO (mayor prioridad para info actualizada)
         if web_results:
-            context += "\n=== INFORMACION DE INTERNET (PRIORIDAD ALTA) ===\n"
-            context += "Esta es informacion EXTERNA encontrada en internet. Usala cuando la pregunta sea sobre:\n"
-            context += "- Otras empresas o negocios (NO Novus)\n"
-            context += "- Informacion actualizada que el usuario solicita explicitamente de internet\n"
-            context += "- Datos recientes o tendencias\n\n"
+            context += "\n=== INFO DE INTERNET ===\n"
             
             for i, result in enumerate(web_results, 1):
-                context += f"[Fuente {i}]\n"
-                context += f"Titulo: {result['title']}\n"
-                context += f"Contenido: {result['content']}\n"
+                context += f"[{i}] {result['title']}\n{result['content'][:400]}\n"
                 
-                # Solo incluir URL en el contexto si el usuario pidio fuentes
                 if include_sources:
                     context += f"URL: {result['url']}\n"
                 
-                context += "---\n"
+                context += "\n"
+            
+            logger.info(f"✓ {len(web_results)} resultados web agregados")
         
-        # Agregar documentos internos DESPUES
         if internal_docs:
-            context += "\n=== INFORMACION DE LA BASE DE CONOCIMIENTOS INTERNA ===\n"
-            context += "Esta es informacion OFICIAL de Novus Soluciones. Usala SOLO cuando pregunten especificamente sobre Novus.\n\n"
+            context += "\n=== DOCS INTERNOS ===\n"
             
             for i, doc in enumerate(internal_docs, 1):
-                context += f"[Documento {i}]\n"
-                context += f"Titulo: {doc['title']}\n"
-                context += f"Contenido: {doc['content'][:500]}\n"
-                if doc.get('category'):
-                    context += f"Categoria: {doc['category']}\n"
-                context += "---\n"
+                context += f"[{i}] {doc['title']}\n{doc['content'][:400]}\n\n"
+            
+            logger.info(f"✓ {len(internal_docs)} docs internos agregados")
         
         if not context:
-            context = "\n=== NO SE ENCONTRO INFORMACION ESPECIFICA ===\n"
-            context += "No hay informacion en la base de datos interna ni en internet para esta consulta.\n"
-            context += "Responde honestamente que no tienes esa informacion y ofrece ayuda alternativa.\n"
+            context = "\n=== CONTEXTO INICIAL ===\n"
+            context += "Sin información adicional de documentos o web.\n"
         
         return context
     
     def should_escalate(self, bot_response):
-        """Detectar si la respuesta indica que el bot no sabe"""
         escalation_indicators = [
             "no tengo esa informacion",
-            "no tengo informacion",
             "no puedo ayudar",
             "no estoy seguro",
-            "no encuentro",
-            "no dispongo",
-            "contactar con un agente",
-            "hablar con una persona",
-            "necesitas hablar con",
+            "contactar con un agente"
         ]
         
         response_lower = bot_response.lower()

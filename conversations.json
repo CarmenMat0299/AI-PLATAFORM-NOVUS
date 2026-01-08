@@ -1,0 +1,22 @@
+[
+  {
+    "phone": "test-final",
+    "date": "2026-01-08",
+    "channel": "test",
+    "started_at": "2026-01-08T11:10:00.314847",
+    "last_message_at": "2026-01-08T11:10:00.341747",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Prueba final",
+        "timestamp": "2026-01-08T11:10:00.314847"
+      },
+      {
+        "role": "assistant",
+        "content": "¡Hola! Gracias por contactarte con Novus Soluciones S.A. ¿En qué puedo ayudarte hoy? Si tienes alguna consulta sobre nuestros servicios tecnológicos, deseas información sobre productos, soluciones, o quieres agendar una reunión con nuestro equipo, estaré encantada de asistirte.\n\nNuestro enfoque es brindar soluciones innovadoras y personalizadas para empresas en Costa Rica y la región, abarcando áreas como desarrollo de software, consultoría tecnológica, inteligencia artificial, migración a la nu",
+        "timestamp": "2026-01-08T11:10:00.341747"
+      }
+    ],
+    "message_count": 2
+  }
+]

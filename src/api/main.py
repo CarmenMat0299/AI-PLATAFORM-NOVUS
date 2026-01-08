@@ -1,14 +1,17 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import json
 import logging
 import os
 import tempfile
+from datetime import datetime, date  #  AGREGADO date
 from src.services.azure_openai_service import AzureOpenAIService
 from src.services.whatsapp_service import WhatsAppService
 from src.services.escalation_service import EscalationService
 from src.services.azure_vision_service import AzureVisionService
 from src.services.azure_speech_service import AzureSpeechService
+from src.services.conversation_service import ConversationService  #  AGREGADO
 from src.utils.faq_handler import check_faq
 from fastapi import Request, Response
 from src.services.teams_service import teams_service  
@@ -18,12 +21,25 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Novus AI Chatbot")
 
+# AGREGAR CORS PARA EL DASHBOARD
+app.add_middleware(
+    CORSMiddleware,
+     allow_origins=[
+        "http://localhost:5173",  # Local
+        "https://lemon-mushroom-0d4526a0f-preview.eastus2.6.azurestaticapps.net"  # Producción
+    ],  # Dashboard URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Inicializar servicios
 openai_service = AzureOpenAIService()
 whatsapp_service = WhatsAppService()
 escalation_service = EscalationService()
 vision_service = AzureVisionService()
 speech_service = AzureSpeechService()
+conversation_service = ConversationService()  #  AGREGADO
 
 conversations = {}
 MAX_HISTORY = 10
@@ -57,7 +73,6 @@ async def whatsapp_webhook_verify(request: Request):
         
         if mode == 'subscribe' and token == verify_token:
             logger.info(" Webhook verificado exitosamente")
-            # Devolver el challenge tal cual lo envía Meta
             return JSONResponse(content=int(challenge), status_code=200)
         else:
             logger.warning(" Verificación fallida")
@@ -79,9 +94,6 @@ async def whatsapp_webhook(request: Request):
         
         logger.info(f"📩 Webhook recibido de Meta")
         
-        # Estructura de webhook de Meta WhatsApp Cloud API
-        # Referencia: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/components
-        
         if 'entry' not in webhook_data:
             logger.warning(" Webhook sin 'entry', ignorando")
             return JSONResponse(content={"status": "ignored"}, status_code=200)
@@ -96,10 +108,8 @@ async def whatsapp_webhook(request: Request):
                 
                 value = change.get('value', {})
                 
-                # Verificar si hay mensajes
                 if 'messages' not in value:
-                    # Puede ser un status update, ignore
-                    logger.info(" Webhook sin mensajes (posiblemente status), ignorando")
+                    logger.info("ℹ️ Webhook sin mensajes (posiblemente status), ignorando")
                     continue
                 
                 messages = value.get('messages', [])
@@ -110,9 +120,8 @@ async def whatsapp_webhook(request: Request):
                     message_type = message.get('type')
                     timestamp = message.get('timestamp')
                     
-                    logger.info(f" Mensaje tipo '{message_type}' de {from_phone}")
+                    logger.info(f"📱 Mensaje tipo '{message_type}' de {from_phone}")
                     
-                    # Marcar como leído
                     await whatsapp_service.mark_message_as_read(message_id)
                     
                     # ===== VERIFICAR SI USUARIO YA FUE ESCALADO =====
@@ -139,12 +148,15 @@ Si deseas continuar con el asistente automático, escribe "volver al bot"."""
                     # ===== MANEJO DE TEXTO =====
                     if message_type == 'text':
                         user_message = message.get('text', {}).get('body', '')
-                        logger.info(f"💬 Mensaje de texto: {user_message}")
+                        logger.info(f" Mensaje de texto: {user_message}")
                         
                         # Verificar FAQ
                         faq_response = check_faq(user_message)
                         if faq_response:
                             await whatsapp_service.send_message(from_phone, faq_response)
+                            #  Guardar conversación FAQ
+                            conversation_service.save_message(from_phone, user_message, role="user", channel="whatsapp")
+                            conversation_service.save_message(from_phone, faq_response, role="assistant", channel="whatsapp")
                             logger.info(" Respuesta FAQ enviada")
                             continue
                         
@@ -166,17 +178,24 @@ Un miembro de nuestro equipo te contactará en breve.
 Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                             
                             await whatsapp_service.send_message(from_phone, escalation_msg)
+                            #  Guardar conversación escalada
+                            conversation_service.save_message(from_phone, user_message, role="user", channel="whatsapp")
+                            conversation_service.save_message(from_phone, escalation_msg, role="assistant", channel="whatsapp")
                             logger.info(" Escalado a agente humano")
                             continue
                         
                         # Generar respuesta con IA
                         history = conversations.get(from_phone, [])[-MAX_HISTORY:]
-                        bot_response = await openai_service.generate_response(user_message, history)
+                        bot_response = await openai_service.generate_response(user_message, history, channel="whatsapp")
                         
                         # Verificar si necesita escalación
                         if openai_service.should_escalate(bot_response):
                             escalation_service.escalate_to_human(from_phone, user_message, history)
                             bot_response += """\n\n¿Te gustaría hablar con un agente humano? Responde "sí" o "hablar con agente"."""
+                        
+                        #  Guardar conversación ANTES de actualizar historial
+                        conversation_service.save_message(from_phone, user_message, role="user", channel="whatsapp")
+                        conversation_service.save_message(from_phone, bot_response, role="assistant", channel="whatsapp")
                         
                         # Guardar en historial
                         history.append({"role": "user", "content": user_message})
@@ -196,28 +215,28 @@ Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                         logger.info(f" Procesando imagen - Media ID: {media_id}")
                         
                         if media_id:
-                            # Descargar imagen
                             media_bytes, mime_type = await whatsapp_service.download_media(media_id)
                             
                             if media_bytes and len(media_bytes) > 0:
                                 logger.info(f" Imagen descargada: {len(media_bytes)} bytes")
                                 
-                                # Analizar imagen con Azure Vision
                                 analysis = await vision_service.analyze_image_from_bytes(media_bytes)
                                 ocr_text = await vision_service.extract_text_from_bytes(media_bytes)
                                 image_summary = vision_service.create_image_summary(analysis, ocr_text)
                                 
                                 logger.info(f" Análisis completado")
                                 
-                                # Construir mensaje para la IA
                                 user_message = f"El usuario envió una imagen por WhatsApp."
                                 if caption:
                                     user_message += f"\n\nMensaje del usuario: '{caption}'"
                                 user_message += f"\n\nAnálisis de la imagen:\n{image_summary}\n\nResponde de manera útil basándote en lo que ves en la imagen."
                                 
-                                # Generar respuesta con IA
                                 history = conversations.get(from_phone, [])[-MAX_HISTORY:]
-                                bot_response = await openai_service.generate_response(user_message, history)
+                                bot_response = await openai_service.generate_response(user_message, history, channel="whatsapp")
+                                
+                                #  Guardar conversación con imagen
+                                conversation_service.save_message(from_phone, "[Usuario envió imagen]", role="user", channel="whatsapp")
+                                conversation_service.save_message(from_phone, bot_response, role="assistant", channel="whatsapp")
                                 
                                 history.append({"role": "user", "content": user_message})
                                 history.append({"role": "assistant", "content": bot_response})
@@ -244,20 +263,16 @@ Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                         logger.info(f" Procesando audio - Media ID: {media_id}")
                         
                         if media_id:
-                            # Descargar audio
                             media_bytes, mime_type = await whatsapp_service.download_media(media_id)
                             
                             if media_bytes and len(media_bytes) > 0:
                                 logger.info(f" Audio descargado: {len(media_bytes)} bytes")
                                 
-                                # Guardar temporalmente para transcribir
-                                import tempfile
                                 with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_file:
                                     temp_file.write(media_bytes)
                                     temp_path = temp_file.name
                                 
                                 try:
-                                    # Transcribir audio
                                     transcribed_text = speech_service.speech_to_text(temp_path)
                                     
                                     if transcribed_text:
@@ -266,10 +281,11 @@ Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                                         # Verificar FAQ
                                         faq_response = check_faq(transcribed_text)
                                         if faq_response:
-                                            await whatsapp_service.send_message(
-                                                from_phone, 
-                                                f"Escuché: '{transcribed_text}'\n\n{faq_response}"
-                                            )
+                                            response_text = f"Escuché: '{transcribed_text}'\n\n{faq_response}"
+                                            await whatsapp_service.send_message(from_phone, response_text)
+                                            #  Guardar conversación
+                                            conversation_service.save_message(from_phone, f"[Audio]: {transcribed_text}", role="user", channel="whatsapp")
+                                            conversation_service.save_message(from_phone, faq_response, role="assistant", channel="whatsapp")
                                             continue
                                         
                                         # Detectar solicitud de agente humano
@@ -289,15 +305,22 @@ Un miembro de nuestro equipo te contactará en breve.
 Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                                             
                                             await whatsapp_service.send_message(from_phone, escalation_msg)
+                                            #  Guardar conversación
+                                            conversation_service.save_message(from_phone, f"[Audio]: {transcribed_text}", role="user", channel="whatsapp")
+                                            conversation_service.save_message(from_phone, escalation_msg, role="assistant", channel="whatsapp")
                                             continue
                                         
                                         # Generar respuesta con IA
                                         history = conversations.get(from_phone, [])[-MAX_HISTORY:]
-                                        bot_response = await openai_service.generate_response(transcribed_text, history)
+                                        bot_response = await openai_service.generate_response(transcribed_text, history, channel="whatsapp")
                                         
                                         if openai_service.should_escalate(bot_response):
                                             escalation_service.escalate_to_human(from_phone, transcribed_text, history)
                                             bot_response += """\n\n¿Te gustaría hablar con un agente humano? Responde "sí" o "hablar con agente"."""
+                                        
+                                        #  Guardar conversación
+                                        conversation_service.save_message(from_phone, f"[Audio]: {transcribed_text}", role="user", channel="whatsapp")
+                                        conversation_service.save_message(from_phone, bot_response, role="assistant", channel="whatsapp")
                                         
                                         history.append({"role": "user", "content": f"[Audio]: {transcribed_text}"})
                                         history.append({"role": "assistant", "content": bot_response})
@@ -314,7 +337,6 @@ Horario de atención: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                                             "Lo siento, no pude entender el audio. ¿Podrías escribir tu mensaje?"
                                         )
                                 finally:
-                                    # Limpiar archivo temporal
                                     try:
                                         os.unlink(temp_path)
                                     except:
@@ -365,7 +387,11 @@ async def test_chat(request: Request):
             }
         
         history = conversations.get(conversation_id, [])[-MAX_HISTORY:]
-        response = await openai_service.generate_response(message, history)
+        response = await openai_service.generate_response(message, history, channel="whatsapp")
+
+        conversation_service.save_message(conversation_id, message, role="user", channel="test")
+        conversation_service.save_message(conversation_id, response, role="assistant", channel="test")
+        
         
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": response})
@@ -388,11 +414,9 @@ async def test_chat(request: Request):
 async def teams_messages(request: Request):
     """Endpoint para recibir mensajes de Microsoft Teams via Bot Framework"""
     try:
-        # Obtener body y auth header
         body = await request.json()
         auth_header = request.headers.get("Authorization", "")
         
-        # Procesar con el servicio de Teams
         await teams_service.process_activity(body, auth_header)
         
         return Response(status_code=200)
@@ -405,8 +429,10 @@ async def teams_messages(request: Request):
 async def get_escalations():
     """Ver todas las solicitudes de agente humano"""
     try:
-        if os.path.exists("escalations.json"):
-            with open("escalations.json", 'r', encoding='utf-8') as f:
+        escalations_path = os.path.join(os.path.dirname(__file__), '..', '..', 'escalations.json')
+        
+        if os.path.exists(escalations_path):
+            with open(escalations_path, 'r', encoding='utf-8') as f:
                 escalations = json.load(f)
             return {"escalations": escalations, "count": len(escalations)}
         else:
@@ -414,15 +440,75 @@ async def get_escalations():
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.post("/api/escalations/resolve")
+async def resolve_escalation(request: Request):
+    """Marcar una escalación como resuelta"""
+    try:
+        data = await request.json()
+        phone = data.get('phone')
+        
+        if not phone:
+            return JSONResponse(
+                content={"error": "Phone number required"}, 
+                status_code=400
+            )
+        
+        result = escalation_service.resolve_escalation(phone)
+        
+        if result:
+            logger.info(f" Escalación resuelta para {phone}")
+            return {
+                "success": True,
+                "message": f"Escalación resuelta para {phone}",
+                "phone": phone
+            }
+        else:
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": f"No se encontró escalación para {phone}"
+                },
+                status_code=404
+            )
+            
+    except Exception as e:
+        logger.error(f" Error resolviendo escalación: {e}")
+        return JSONResponse(
+            content={"error": str(e)}, 
+            status_code=500
+        )
+
+@app.get("/api/conversations")
+async def get_conversations():
+    """Ver conversaciones del día"""
+    try:
+        conversations_list = conversation_service.get_today_conversations()
+        
+        return {
+            "conversations": conversations_list,
+            "count": len(conversations_list),
+            "date": date.today().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo conversaciones: {e}")
+        return JSONResponse(
+            content={"error": str(e)}, 
+            status_code=500
+        )
+
 @app.get("/api/stats")
 async def get_stats():
     """Estadísticas básicas del chatbot"""
     try:
-        total_conversations = len(conversations)
+        # Conversaciones del día
+        total_conversations = conversation_service.get_conversation_count()
+        
+        # Escalaciones
+        escalations_path = os.path.join(os.path.dirname(__file__), '..', '..', 'escalations.json')
         total_escalations = 0
         
-        if os.path.exists("escalations.json"):
-            with open("escalations.json", 'r', encoding='utf-8') as f:
+        if os.path.exists(escalations_path):
+            with open(escalations_path, 'r', encoding='utf-8') as f:
                 escalations = json.load(f)
                 total_escalations = len(escalations)
         
