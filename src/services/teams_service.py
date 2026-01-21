@@ -6,6 +6,8 @@ from src.services.azure_search_service import AzureSearchService
 from src.services.web_search_service import WebSearchService
 from src.services.novus_website_tool import NovusWebsiteTool
 from .keyvault_service import KeyVaultService
+from src.services.conversation_service import ConversationService
+from src.services.activity_service import ActivityService
 import traceback
 import logging
 from openai import AsyncAzureOpenAI
@@ -26,8 +28,11 @@ class TeamsService:
         app_password = kv.get_secret("MICROSOFT-APP-PASSWORD")
         tenant_id = kv.get_secret("MICROSOFT-APP-TENANT-ID")
         api_version=os.getenv('AZURE_OPENAI_API_VERSION') or '2024-02-15-preview'
-        
-        logger.info(f"App ID cargado: {app_id[:8]}...")
+
+        if app_id:
+            logger.info(f"App ID cargado: {app_id[:8]}...")
+        else:
+            logger.warning("MICROSOFT-APP-ID no configurado")
         logger.info("Inicializando JulIA - Asistente IA de Novus con function calling")
         
         settings = BotFrameworkAdapterSettings(
@@ -46,6 +51,8 @@ class TeamsService:
         self.kv = kv
         self.search_service = AzureSearchService()
         self.web_service = WebSearchService()
+        self.conversation_service = ConversationService()
+        self.activity_service = ActivityService()
         
         self.client = AsyncAzureOpenAI(
             azure_endpoint=kv.get_secret('AzureOpenAIEndpoint'),
@@ -197,8 +204,31 @@ class TeamsService:
             
             response = await self._process_query(user_message, user_id, user_name, images)
             
+             # 🆕 Guardar conversación en Teams (usando nombre de usuario)
+            display_message = user_message if user_message else f"[Usuario envió {len(images)} imagen(es)]"
+            self.conversation_service.save_message(
+                user_name,
+                display_message,
+                role="user",
+                channel="teams"
+            )
+            self.conversation_service.save_message(
+                user_name,
+                response,
+                role="assistant",
+                channel="teams"
+            )
+
+            # Registrar actividad
+            self.activity_service.log_activity(
+                activity_type="conversation",
+                message="Mensaje de Teams",
+                details=f"{user_name} - {display_message[:50]}...",
+                phone=user_name
+            )
+
             await turn_context.send_activity(response)
-            logger.info(f"✓ Enviado")
+            logger.info(f" Enviado y guardado en historial")
         
         elif turn_context.activity.type == ActivityTypes.conversation_update:
             if turn_context.activity.members_added:

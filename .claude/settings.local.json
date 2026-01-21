@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\AnaLuciaMatarritaGra\\\\Documents\\\\ai-platform-novus\\\\src\\\\api\\\\__pycache__\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name, LastWriteTime)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

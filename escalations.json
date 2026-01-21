@@ -4,6 +4,8 @@
     "user_phone": "+50612345678",
     "last_message": "Hola, puedo hablar con un humano?",
     "conversation": [],
-    "status": "pending"
+    "status": "resolved",
+    "resolved": true,
+    "resolved_at": "2026-01-20T13:14:16.635310"
   }
 ]

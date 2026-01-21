@@ -1,0 +1,65 @@
+[
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-21T10:47:23.154529"
+  },
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-21T10:43:50.511287"
+  },
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-21T10:38:08.381874"
+  },
+  {
+    "type": "system",
+    "message": "Usuario autenticado",
+    "details": "Login exitoso: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-21T09:54:37.242204"
+  },
+  {
+    "type": "system",
+    "message": "Usuario autenticado",
+    "details": "Login exitoso: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-21T09:52:35.753653"
+  },
+  {
+    "type": "system",
+    "message": "Usuario autenticado",
+    "details": "Login exitoso: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-20T14:25:10.495766"
+  },
+  {
+    "type": "system",
+    "message": "Usuario autenticado",
+    "details": "Login exitoso: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-20T14:16:16.725331"
+  },
+  {
+    "type": "system",
+    "message": "Usuario autenticado",
+    "details": "Login exitoso: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-20T13:13:57.933704"
+  },
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-20T12:50:23.363331"
+  }
+]

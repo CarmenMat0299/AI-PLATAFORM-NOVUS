@@ -1,0 +1,39 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/images/*", "*.js", "*.css", "*.png", "*.jpg", "*.jpeg", "*.svg", "*.ico", "*.woff", "*.woff2"]
+  },
+  "routes": [
+    {
+      "route": "/",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/escalations",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/conversations",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/chat/*",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/logs",
+      "rewrite": "/index.html"
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "application/javascript",
+    ".css": "text/css"
+  }
+}

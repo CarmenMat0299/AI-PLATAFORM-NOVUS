@@ -23,7 +23,7 @@ class ConversationService:
         )
         logger.info(f"ConversationService inicializado - archivo: {self.conversations_file}")
     
-    def save_message(self, phone: str, message: str, role: str = "user", channel: str = "whatsapp") -> bool:
+    def save_message(self, phone: str, message: str, role: str = "user", channel: str = "whatsapp", user_name: str = None) -> bool:
         """
         Guardar un mensaje en la conversación
         
@@ -32,6 +32,7 @@ class ConversationService:
             message: Contenido del mensaje
             role: "user" o "assistant"
             channel: "whatsapp" o "teams"
+            user_name: Nombre del usuario (opcional)
         
         Returns:
             True si se guardó correctamente, False si hubo error
@@ -60,6 +61,7 @@ class ConversationService:
             if not user_conv:
                 user_conv = {
                     "phone": phone,
+                    "user_name": user_name or phone,  # 🆕 Guardar nombre del usuario
                     "date": today,
                     "channel": channel,
                     "started_at": datetime.now(CR_TZ).isoformat(),
@@ -68,7 +70,11 @@ class ConversationService:
                     "message_count": 0
                 }
                 all_conversations.append(user_conv)
-                logger.info(f" Nueva conversación creada para {phone}")
+                logger.info(f"✅ Nueva conversación creada para {user_name or phone}")
+            else:
+                # 🆕 Actualizar nombre si se proporcionó uno nuevo
+                if user_name:
+                    user_conv["user_name"] = user_name
             
             # Agregar mensaje
             user_conv["messages"].append({
@@ -82,11 +88,11 @@ class ConversationService:
             # Guardar todo
             self._save_conversations(all_conversations)
             
-            logger.info(f" Mensaje guardado - {phone} ({role})")
+            logger.info(f"✅ Mensaje guardado - {user_name or phone} ({role})")
             return True
             
         except Exception as e:
-            logger.error(f" Error guardando mensaje: {e}", exc_info=True)
+            logger.error(f"❌ Error guardando mensaje: {e}", exc_info=True)
             return False
     
     def get_today_conversations(self) -> List[Dict]:
@@ -106,11 +112,11 @@ class ConversationService:
                 if conv.get('date') == today
             ]
             
-            logger.info(f" {len(today_conversations)} conversaciones de hoy")
+            logger.info(f"📋 {len(today_conversations)} conversaciones de hoy")
             return today_conversations
             
         except Exception as e:
-            logger.error(f" Error obteniendo conversaciones: {e}")
+            logger.error(f"❌ Error obteniendo conversaciones: {e}")
             return []
     
     def get_conversation_count(self) -> int:
