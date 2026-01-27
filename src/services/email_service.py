@@ -1,17 +1,43 @@
 import smtplib
 import os
+import json
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
 class EmailService:
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME", "")
-        self.smtp_password = os.getenv("SMTP_PASSWORD", "")
-        self.from_email = os.getenv("FROM_EMAIL", "noreply@novus.com")
+        # Intentar cargar configuración desde archivo JSON
+        config = self._load_config()
+
+        # Si existe configuración en archivo y está habilitada, usar esa
+        if config and config.get('enabled', False):
+            self.smtp_server = config.get('smtp_server', 'smtp.gmail.com')
+            self.smtp_port = int(config.get('smtp_port', 587))
+            self.smtp_username = config.get('smtp_username', '')
+            self.smtp_password = config.get('smtp_password', '')
+            self.from_email = config.get('from_email', 'noreply@novus.com')
+        else:
+            # Usar variables de entorno como fallback
+            self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+            self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+            self.smtp_username = os.getenv("SMTP_USERNAME", "")
+            self.smtp_password = os.getenv("SMTP_PASSWORD", "")
+            self.from_email = os.getenv("FROM_EMAIL", "noreply@novus.com")
+
         self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    def _load_config(self):
+        """Cargar configuración SMTP desde archivo JSON"""
+        try:
+            config_file = Path("smtp_config.json")
+            if config_file.exists():
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Error loading SMTP config: {e}")
+        return None
 
     def send_password_reset_email(self, to_email: str, reset_token: str) -> bool:
         """Send password reset email"""

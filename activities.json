@@ -1,5 +1,40 @@
 [
   {
+    "type": "auth",
+    "message": "Usuario Carmen Matarrita inició sesión",
+    "details": "Email: carmen.matarrita@novuscr.com",
+    "phone": null,
+    "timestamp": "2026-01-27T15:33:45.585745+00:00"
+  },
+  {
+    "type": "auth",
+    "message": "Usuario Administrador inició sesión",
+    "details": "Email: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-27T14:56:34.659207+00:00"
+  },
+  {
+    "type": "auth",
+    "message": "Usuario Administrador inició sesión",
+    "details": "Email: admin@novus.com",
+    "phone": null,
+    "timestamp": "2026-01-27T14:51:28.601132+00:00"
+  },
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-27T14:51:01.667990+00:00"
+  },
+  {
+    "type": "system",
+    "message": "Sistema iniciado",
+    "details": "Todos los servicios cargados correctamente",
+    "phone": null,
+    "timestamp": "2026-01-27T00:00:33.254839+00:00"
+  },
+  {
     "type": "system",
     "message": "Sistema iniciado",
     "details": "Todos los servicios cargados correctamente",

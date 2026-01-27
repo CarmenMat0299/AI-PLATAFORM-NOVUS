@@ -18,6 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código de la aplicación
 COPY src/ ./src/
 
+# Copiar archivos de configuración y datos
+COPY .env .env
+COPY users.json users.json
+COPY escalations.json escalations.json
+COPY activities.json activities.json
+COPY smtp_config.json smtp_config.json
+
 # Exponer puerto
 EXPOSE 8000
 
