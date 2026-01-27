@@ -150,8 +150,8 @@ class AuthService:
         if not users:
             admin = {
                 "id": str(uuid.uuid4()),
-                "email": "admin@novus.com",
-                "full_name": "Administrador",
+                "email": "carmen.matarrita@novuscr.com",
+                "full_name": "Carmen Matarrita",
                 "hashed_password": self.get_password_hash("admin123"),
                 "role": "admin",
                 "is_active": True,
@@ -163,4 +163,4 @@ class AuthService:
 
             users.append(admin)
             self._save_users(users)
-            print("[+] Created initial admin user: admin@novus.com / admin123")
+            print("[+] Created initial admin user: carmen.matarrita@novuscr.com / admin123")

@@ -18,12 +18,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código de la aplicación
 COPY src/ ./src/
 
-# Copiar archivos de configuración y datos
-COPY .env .env
-COPY users.json users.json
-COPY escalations.json escalations.json
-COPY activities.json activities.json
-COPY smtp_config.json smtp_config.json
+# Crear archivos JSON iniciales vacíos
+# La aplicación los poblará automáticamente al iniciar
+RUN echo '[]' > users.json && \
+    echo '[]' > escalations.json && \
+    echo '[]' > activities.json && \
+    echo '{"smtp_server":"","smtp_port":587,"smtp_username":"","smtp_password":"","from_email":"","enabled":false}' > smtp_config.json
 
 # Exponer puerto
 EXPOSE 8000
