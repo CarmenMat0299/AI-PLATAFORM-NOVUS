@@ -42,7 +42,7 @@ const Login = () => {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="/JULIA_192_192.png"
+                src="/JulIA_192_192.png"
                 alt="JULIA Logo"
                 className="h-24 w-24 object-contain"
               />
@@ -158,15 +158,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Info Box */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-xs text-gray-700 text-center">
-              <span className="font-semibold text-blue-700">Credenciales de prueba:</span>
-              <br />
-              <span className="font-mono text-sm">admin@novus.com</span> / <span className="font-mono text-sm">admin123</span>
-            </p>
-          </div>
 
           {/* Footer */}
           <div className="mt-6 pt-6 border-t border-gray-200">

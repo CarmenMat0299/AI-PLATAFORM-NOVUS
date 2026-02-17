@@ -38,7 +38,7 @@ const ForgotPassword = () => {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="/JULIA_192_192.png"
+                src="/JulIA_192_192.png"
                 alt="JULIA Logo"
                 className="h-24 w-24 object-contain"
               />
