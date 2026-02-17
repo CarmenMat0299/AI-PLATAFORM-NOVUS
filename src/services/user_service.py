@@ -70,7 +70,7 @@ class UserService:
             result.append(user_data)
         return result
 
-    def create_user(self, email: str, password: str, full_name: str, role: str = "user") -> dict:
+    def create_user(self, email: str, password: str, full_name: str, role: str = "user", department_id: Optional[str] = None) -> dict:
         """Create a new user"""
         users = self._load_users()
 
@@ -86,6 +86,7 @@ class UserService:
             "full_name": full_name,
             "hashed_password": self.auth_service.get_password_hash(password),
             "role": role,
+            "department_id": department_id,
             "is_active": True,
             "created_at": datetime.utcnow().isoformat(),
             "last_login": None,
@@ -123,6 +124,9 @@ class UserService:
 
                 if "is_active" in update_data:
                     user["is_active"] = update_data["is_active"]
+
+                if "department_id" in update_data:
+                    user["department_id"] = update_data["department_id"]
 
                 self._save_users(users)
 

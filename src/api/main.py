@@ -6,6 +6,9 @@ import logging
 import os
 import tempfile
 from datetime import datetime, date, timezone
+import pytz
+
+CR_TZ = pytz.timezone('America/Costa_Rica')
 
 def get_utc_now():
     """Obtener fecha/hora actual en UTC con formato ISO"""
@@ -22,6 +25,7 @@ from src.services.teams_service import teams_service
 from src.services.activity_service import ActivityService
 from src.services.auth_service import AuthService
 from src.services.email_service import EmailService
+from src.services.notification_service import NotificationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,6 +51,7 @@ conversation_service = ConversationService()
 activity_service = ActivityService()
 auth_service = AuthService()
 email_service = EmailService()
+notification_service = NotificationService()
 
 # Crear usuario admin inicial si no existe
 auth_service.create_initial_admin()
@@ -411,6 +416,180 @@ async def change_password(request: Request):
 
     except Exception as e:
         logger.error(f"Error en change_password: {e}", exc_info=True)
+        return JSONResponse(
+            content={"detail": "Error al procesar la solicitud"},
+            status_code=500
+        )
+
+# ============================================
+# NOTIFICACIONES
+# ============================================
+
+@app.get("/api/notifications")
+async def get_notifications(request: Request, unread_only: bool = False):
+    """
+    Obtener notificaciones del usuario actual
+
+    Headers:
+        - Authorization: Bearer {token}
+
+    Query Params:
+        - unread_only: bool (opcional, por defecto False)
+
+    Returns:
+        - notifications: Lista de notificaciones
+        - unread_count: Número de notificaciones no leídas
+    """
+    try:
+        # Extraer token del header
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return JSONResponse(
+                content={"detail": "Token no proporcionado"},
+                status_code=401
+            )
+
+        token = auth_header.replace('Bearer ', '')
+        payload = auth_service.verify_token(token)
+
+        if not payload:
+            return JSONResponse(
+                content={"detail": "Token inválido o expirado"},
+                status_code=401
+            )
+
+        user_id = payload.get('user_id')
+
+        # Obtener el usuario para verificar su rol
+        users = auth_service._load_users()
+        user_email = payload.get('sub')
+        current_user = next((u for u in users if u['email'] == user_email), None)
+        user_role = current_user.get('role') if current_user else 'collaborator'
+
+        # Obtener notificaciones
+        notifications = notification_service.get_notifications(
+            user_id=user_id,
+            unread_only=unread_only
+        )
+
+        # Filtrar por rol - colaboradores solo ven escalaciones
+        if user_role != 'admin':
+            notifications = [n for n in notifications if n.get('type') == 'escalation']
+
+        # Obtener conteo de no leídas
+        unread_count = notification_service.get_unread_count(user_id=user_id)
+
+        # Filtrar conteo por rol también
+        if user_role != 'admin':
+            unread_notifications = [n for n in notification_service.get_notifications(user_id=user_id, unread_only=True) if n.get('type') == 'escalation']
+            unread_count = len(unread_notifications)
+
+        return {
+            "notifications": notifications,
+            "unread_count": unread_count
+        }
+
+    except Exception as e:
+        logger.error(f"Error obteniendo notificaciones: {e}", exc_info=True)
+        return JSONResponse(
+            content={"detail": "Error al procesar la solicitud"},
+            status_code=500
+        )
+
+@app.post("/api/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, request: Request):
+    """
+    Marcar una notificación como leída
+
+    Headers:
+        - Authorization: Bearer {token}
+
+    Returns:
+        - message: Confirmación
+    """
+    try:
+        # Extraer token del header
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return JSONResponse(
+                content={"detail": "Token no proporcionado"},
+                status_code=401
+            )
+
+        token = auth_header.replace('Bearer ', '')
+        payload = auth_service.verify_token(token)
+
+        if not payload:
+            return JSONResponse(
+                content={"detail": "Token inválido o expirado"},
+                status_code=401
+            )
+
+        user_id = payload.get('user_id')
+
+        # Marcar como leída
+        success = notification_service.mark_as_read(notification_id, user_id=user_id)
+
+        if not success:
+            return JSONResponse(
+                content={"detail": "Notificación no encontrada"},
+                status_code=404
+            )
+
+        return {"message": "Notificación marcada como leída"}
+
+    except Exception as e:
+        logger.error(f"Error marcando notificación como leída: {e}", exc_info=True)
+        return JSONResponse(
+            content={"detail": "Error al procesar la solicitud"},
+            status_code=500
+        )
+
+@app.post("/api/notifications/read-all")
+async def mark_all_notifications_read(request: Request):
+    """
+    Marcar todas las notificaciones como leídas
+
+    Headers:
+        - Authorization: Bearer {token}
+
+    Returns:
+        - message: Confirmación
+        - count: Número de notificaciones marcadas
+    """
+    try:
+        # Extraer token del header
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return JSONResponse(
+                content={"detail": "Token no proporcionado"},
+                status_code=401
+            )
+
+        token = auth_header.replace('Bearer ', '')
+        payload = auth_service.verify_token(token)
+
+        if not payload:
+            return JSONResponse(
+                content={"detail": "Token inválido o expirado"},
+                status_code=401
+            )
+
+        user_id = payload.get('user_id')
+
+        # Marcar todas como leídas
+        count = notification_service.mark_all_as_read(user_id=user_id)
+
+        return {
+            "message": f"{count} notificaciones marcadas como leídas",
+            "count": count
+        }
+
+    except Exception as e:
+        logger.error(f"Error marcando todas las notificaciones como leídas: {e}", exc_info=True)
         return JSONResponse(
             content={"detail": "Error al procesar la solicitud"},
             status_code=500
@@ -1036,6 +1215,81 @@ async def admin_reset_user_password(user_id: str, request: Request):
         return JSONResponse(content={"detail": "Error al procesar la solicitud"}, status_code=500)
 
 # ============================================
+# ENDPOINTS DE DEPARTAMENTOS
+# ============================================
+
+DEPARTMENTS_FILE = "departments.json"
+
+def _load_departments():
+    if os.path.exists(DEPARTMENTS_FILE):
+        with open(DEPARTMENTS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+def _save_departments(departments):
+    with open(DEPARTMENTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(departments, f, indent=2, ensure_ascii=False)
+
+@app.get("/api/departments")
+async def get_departments():
+    """Obtener todos los departamentos"""
+    try:
+        return {"departments": _load_departments()}
+    except Exception as e:
+        logger.error(f"Error obteniendo departamentos: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/api/departments")
+async def create_department(request: Request):
+    """Crear un nuevo departamento"""
+    try:
+        data = await request.json()
+        departments = _load_departments()
+        import uuid as _uuid
+        new_dept = {
+            "id": f"dept_{_uuid.uuid4().hex[:8]}",
+            "name": data.get("name"),
+            "color": data.get("color", "#6366F1")
+        }
+        departments.append(new_dept)
+        _save_departments(departments)
+        return {"department": new_dept}
+    except Exception as e:
+        logger.error(f"Error creando departamento: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.put("/api/departments/{dept_id}")
+async def update_department(dept_id: str, request: Request):
+    """Actualizar un departamento"""
+    try:
+        data = await request.json()
+        departments = _load_departments()
+        for dept in departments:
+            if dept["id"] == dept_id:
+                if "name" in data:
+                    dept["name"] = data["name"]
+                if "color" in data:
+                    dept["color"] = data["color"]
+                _save_departments(departments)
+                return {"department": dept}
+        return JSONResponse(content={"error": "Departamento no encontrado"}, status_code=404)
+    except Exception as e:
+        logger.error(f"Error actualizando departamento: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.delete("/api/departments/{dept_id}")
+async def delete_department(dept_id: str):
+    """Eliminar un departamento"""
+    try:
+        departments = _load_departments()
+        departments = [d for d in departments if d["id"] != dept_id]
+        _save_departments(departments)
+        return {"message": "Departamento eliminado"}
+    except Exception as e:
+        logger.error(f"Error eliminando departamento: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+# ============================================
 # WEBHOOKS
 # ============================================
 
@@ -1152,6 +1406,9 @@ Si deseas continuar con el asistente automatico, escribe "volver al bot"."""
                             history = conversations.get(from_phone, [])
                             escalation_service.escalate_to_human(from_phone, user_message, history)
 
+                            # Crear notificación
+                            notification_service.notify_new_escalation(from_phone, user_message)
+
                             escalation_msg = """Entendido. Te voy a conectar con un agente humano.
 
 Un miembro de nuestro equipo te contactara en breve.
@@ -1179,6 +1436,8 @@ Horario de atencion: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                         # Verificar si necesita escalacion
                         if openai_service.should_escalate(bot_response):
                             escalation_service.escalate_to_human(from_phone, user_message, history)
+                            # Crear notificación
+                            notification_service.notify_new_escalation(from_phone, user_message)
                             bot_response += """\n\nTe gustaria hablar con un agente humano? Responde "si" o "hablar con agente"."""
 
                         conversation_service.save_message(from_phone, user_message, role="user", channel="whatsapp")
@@ -1295,6 +1554,8 @@ Horario de atencion: Lunes a Viernes, 8:00 AM - 5:00 PM"""
                                         if any(keyword in transcribed_text.lower() for keyword in human_request_keywords):
                                             history = conversations.get(from_phone, [])
                                             escalation_service.escalate_to_human(from_phone, transcribed_text, history)
+                                            # Crear notificación
+                                            notification_service.notify_new_escalation(from_phone, transcribed_text)
                                             escalation_msg = """Entendido. Te voy a conectar con un agente humano.
 
 Un miembro de nuestro equipo te contactara en breve.
@@ -1311,6 +1572,8 @@ Horario de atencion: Lunes a Viernes, 8:00 AM - 5:00 PM"""
 
                                         if openai_service.should_escalate(bot_response):
                                             escalation_service.escalate_to_human(from_phone, transcribed_text, history)
+                                            # Crear notificación
+                                            notification_service.notify_new_escalation(from_phone, transcribed_text)
                                             bot_response += """\n\nTe gustaria hablar con un agente humano? Responde "si" o "hablar con agente"."""
 
                                         conversation_service.save_message(from_phone, f"[Audio]: {transcribed_text}", role="user", channel="whatsapp")
@@ -1460,6 +1723,8 @@ async def resolve_escalation(request: Request):
 
         if result:
             logger.info(f"Escalacion resuelta para {phone} por {resolved_by}")
+            # Crear notificación
+            notification_service.notify_escalation_resolved(phone, resolved_by or "Usuario")
             return {
                 "success": True,
                 "message": f"Escalacion resuelta para {phone}",
@@ -1640,14 +1905,14 @@ async def update_escalation_status(request: Request):
 
 @app.get("/api/conversations")
 async def get_conversations():
-    """Ver conversaciones del dia"""
+    """Ver todas las conversaciones"""
     try:
-        conversations_list = conversation_service.get_today_conversations()
+        conversations_list = conversation_service.get_all_conversations()
 
         return {
             "conversations": conversations_list,
             "count": len(conversations_list),
-            "date": date.today().isoformat()
+            "date": datetime.now(CR_TZ).date().isoformat()
         }
     except Exception as e:
         logger.error(f"Error obteniendo conversaciones: {e}")
@@ -1880,29 +2145,89 @@ async def get_metrics():
             {'name': 'Teams', 'value': teams_pct, 'color': '#5558AF'}
         ]
 
-        # Datos semanales desde el historial
+        # Datos semanales: últimos 6 días históricos + hoy
         weekly_data = []
-        last_7_days = metrics_history_service.get_last_n_days(7)
-
-        # Ordenar por fecha ascendente
-        last_7_days.sort(key=lambda x: x.get('date', ''))
-
-        # weekday() retorna 0=Lunes, 1=Martes, ..., 6=Domingo
         days_es = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-        for snapshot in last_7_days:
-            # Convertir fecha a día de la semana
-            try:
-                date_obj = datetime.fromisoformat(snapshot['date'])
-                day_name = days_es[date_obj.weekday()]
+        # Obtener fecha de hoy
+        today = datetime.now(cr_tz).date()
+        today_str = today.isoformat()
 
-                weekly_data.append({
-                    'day': day_name,
-                    'whatsapp': snapshot.get('whatsapp_conversations', 0),
-                    'teams': snapshot.get('teams_conversations', 0)
-                })
-            except:
-                pass
+        # Obtener historial
+        last_7_days = metrics_history_service.get_last_n_days(7)
+
+        # Guardar snapshot del día actual si hay datos
+        if len(conversations_list) > 0:
+            # Calcular métricas del día actual
+            total_messages = sum(conv.get('message_count', 0) for conv in conversations_list)
+            unique_users = len(set(conv.get('phone') for conv in conversations_list if conv.get('phone')))
+
+            # Cargar escalaciones de hoy
+            escalations_today = [e for e in escalations if e.get('timestamp', '')[:10] == today_str]
+            escalations_created = len(escalations_today)
+            escalations_resolved = sum(1 for e in escalations_today if e.get('resolved', False))
+
+            # Calcular tiempo promedio de respuesta
+            response_times = []
+            for conv in conversations_list:
+                messages = conv.get('messages', [])
+                for idx in range(len(messages) - 1):
+                    if messages[idx].get('role') == 'user' and messages[idx+1].get('role') == 'assistant':
+                        try:
+                            user_time = datetime.fromisoformat(messages[idx]['timestamp'])
+                            bot_time = datetime.fromisoformat(messages[idx+1]['timestamp'])
+                            if user_time.tzinfo is None:
+                                user_time = cr_tz.localize(user_time)
+                            if bot_time.tzinfo is None:
+                                bot_time = cr_tz.localize(bot_time)
+                            diff_seconds = (bot_time - user_time).total_seconds()
+                            if 0 < diff_seconds < 600:
+                                response_times.append(diff_seconds)
+                        except:
+                            pass
+
+            avg_response_time = sum(response_times) / len(response_times) if response_times else None
+
+            # Guardar o actualizar snapshot del día actual
+            metrics_history_service.save_daily_snapshot(
+                date_str=today_str,
+                total_conversations=len(conversations_list),
+                whatsapp_conversations=whatsapp_count,
+                teams_conversations=teams_count,
+                total_messages=total_messages,
+                unique_users=unique_users,
+                escalations_created=escalations_created,
+                escalations_resolved=escalations_resolved,
+                avg_response_time_seconds=avg_response_time
+            )
+
+        # Generar últimos 7 días (incluyendo hoy)
+        for i in range(6, -1, -1):  # 6 días atrás hasta hoy (0)
+            target_date = today - timedelta(days=i)
+            target_date_str = target_date.isoformat()
+            day_name = days_es[target_date.weekday()]
+
+            whatsapp_conv = 0
+            teams_conv = 0
+
+            # Si es hoy, usar conversaciones actuales
+            if i == 0:
+                whatsapp_conv = whatsapp_count
+                teams_conv = teams_count
+            else:
+                # Buscar en historial
+                for snapshot in last_7_days:
+                    if snapshot.get('date') == target_date_str:
+                        whatsapp_conv = snapshot.get('whatsapp_conversations', 0)
+                        teams_conv = snapshot.get('teams_conversations', 0)
+                        break
+
+            weekly_data.append({
+                'day': day_name,
+                'whatsapp': whatsapp_conv,
+                'teams': teams_conv,
+                'date': target_date_str
+            })
 
         return {
             'hourlyData': hourly_data,
@@ -1928,7 +2253,7 @@ async def save_metrics_snapshot():
 
         # Obtener conversaciones del día actual
         today_convs = conversation_service.get_today_conversations()
-        today = date.today().isoformat()
+        today = datetime.now(CR_TZ).date().isoformat()
 
         # Calcular métricas
         total_conversations = len(today_convs)

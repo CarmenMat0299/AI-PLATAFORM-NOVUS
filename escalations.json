@@ -1,11 +1,65 @@
 [
   {
-    "timestamp": "2025-10-07T14:51:03.388527",
+    "timestamp": "2025-10-07T20:51:03.388527+00:00",
     "user_phone": "+50612345678",
     "last_message": "Hola, puedo hablar con un humano?",
     "conversation": [],
     "status": "resolved",
     "resolved": true,
-    "resolved_at": "2026-01-20T13:14:16.635310"
+    "resolved_at": "2026-01-20T19:14:16.635310+00:00",
+    "resolved_by": "Admin"
+  },
+  {
+    "timestamp": "2026-01-22T16:30:00.000000+00:00",
+    "user_phone": "+50687654321",
+    "last_message": "Necesito ayuda con un problema técnico urgente",
+    "conversation": [
+      {"role": "user", "content": "Hola, tengo un problema"},
+      {"role": "assistant", "content": "Hola! En qué puedo ayudarte?"},
+      {"role": "user", "content": "Mi sistema no funciona correctamente"},
+      {"role": "assistant", "content": "Entiendo, déjame ayudarte a resolver esto"},
+      {"role": "user", "content": "Necesito ayuda con un problema técnico urgente"}
+    ],
+    "status": "pending",
+    "resolved": false,
+    "priority": "high",
+    "history": [
+      {"id": "hist_1", "action": "created", "timestamp": "2026-01-22T16:30:00.000000+00:00", "details": "Escalación creada"}
+    ]
+  },
+  {
+    "timestamp": "2026-01-22T17:15:00.000000+00:00",
+    "user_phone": "+50699887766",
+    "last_message": "Quiero información sobre los servicios",
+    "conversation": [
+      {"role": "user", "content": "Hola buenas tardes"},
+      {"role": "assistant", "content": "Buenas tardes! En qué puedo ayudarte?"},
+      {"role": "user", "content": "Quiero información sobre los servicios"}
+    ],
+    "status": "pending",
+    "resolved": false,
+    "history": [
+      {"id": "hist_2", "action": "created", "timestamp": "2026-01-22T17:15:00.000000+00:00", "details": "Escalación creada"}
+    ]
+  },
+  {
+    "timestamp": "2026-01-23T15:00:00.000000+00:00",
+    "user_phone": "+50655544433",
+    "last_message": "Estoy esperando respuesta desde ayer",
+    "conversation": [
+      {"role": "user", "content": "Necesito soporte técnico"},
+      {"role": "assistant", "content": "Te transfiero con un agente"},
+      {"role": "user", "content": "Estoy esperando respuesta desde ayer"}
+    ],
+    "status": "in_progress",
+    "resolved": false,
+    "priority": "urgent",
+    "assigned_agent": "agent1",
+    "assigned_at": "2026-01-23T15:30:00.000000+00:00",
+    "history": [
+      {"id": "hist_3", "action": "created", "timestamp": "2026-01-23T15:00:00.000000+00:00", "details": "Escalación creada"},
+      {"id": "hist_4", "action": "assigned", "timestamp": "2026-01-23T15:30:00.000000+00:00", "value": "Carlos Rodríguez"},
+      {"id": "hist_5", "action": "status_changed", "timestamp": "2026-01-23T15:30:00.000000+00:00", "value": "En proceso"}
+    ]
   }
 ]

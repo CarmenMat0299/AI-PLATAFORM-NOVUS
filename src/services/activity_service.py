@@ -4,11 +4,15 @@ Servicio para registrar y recuperar actividad reciente del sistema
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict
 import logging
 
 logger = logging.getLogger(__name__)
+
+def get_utc_now():
+    """Obtener fecha/hora actual en UTC con formato ISO"""
+    return datetime.now(timezone.utc).isoformat()
 
 class ActivityService:
     """Servicio para gestionar la actividad reciente del sistema"""
@@ -42,7 +46,7 @@ class ActivityService:
                 "message": message,
                 "details": details,
                 "phone": phone,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": get_utc_now()
             }
             
             # Agregar al inicio de la lista

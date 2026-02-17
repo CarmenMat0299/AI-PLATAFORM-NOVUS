@@ -18,12 +18,25 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código de la aplicación
 COPY src/ ./src/
 
-# Crear archivos JSON iniciales vacíos
-# La aplicación los poblará automáticamente al iniciar
-RUN echo '[]' > users.json && \
-    echo '[]' > escalations.json && \
-    echo '[]' > activities.json && \
-    echo '{"smtp_server":"","smtp_port":587,"smtp_username":"","smtp_password":"","from_email":"","enabled":false}' > smtp_config.json
+# Copiar archivos JSON existentes (con datos)
+COPY users.json ./users.json
+COPY departments.json ./departments.json
+COPY escalations.json ./escalations.json
+COPY activities.json ./activities.json
+COPY conversations.json ./conversations.json
+COPY metrics_history.json ./metrics_history.json
+COPY notifications.json ./notifications.json
+COPY smtp_config.json ./smtp_config.json
+
+# Crear archivos JSON vacíos si no existen
+RUN test -f users.json || echo '[]' > users.json && \
+    test -f escalations.json || echo '[]' > escalations.json && \
+    test -f activities.json || echo '[]' > activities.json && \
+    test -f conversations.json || echo '[]' > conversations.json && \
+    test -f metrics_history.json || echo '[]' > metrics_history.json && \
+    test -f notifications.json || echo '[]' > notifications.json && \
+    test -f smtp_config.json || echo '{"smtp_server":"","smtp_port":587,"smtp_username":"","smtp_password":"","from_email":"","enabled":false}' > smtp_config.json && \
+    test -f departments.json || echo '[{"id":"dept_soporte","name":"Soporte","color":"#EF4444"}]' > departments.json
 
 # Exponer puerto
 EXPOSE 8000

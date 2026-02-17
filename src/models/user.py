@@ -7,6 +7,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: str = "user"
+    department_id: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -18,6 +19,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    department_id: Optional[str] = None
 
 
 class UserResponse(UserBase):
@@ -25,6 +27,7 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
     last_login: Optional[datetime] = None
+    department_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -38,3 +41,4 @@ class UserInDB(UserBase):
     last_login: Optional[datetime] = None
     password_reset_token: Optional[str] = None
     password_reset_expires: Optional[datetime] = None
+    department_id: Optional[str] = None
