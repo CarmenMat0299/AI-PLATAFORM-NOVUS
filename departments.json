@@ -1,0 +1,7 @@
+[
+  { "id": "dept_bd", "name": "Base de Datos", "color": "#3B82F6" },
+  { "id": "dept_dev", "name": "Desarrollo", "color": "#10B981" },
+  { "id": "dept_ia", "name": "Inteligencia Artificial", "color": "#8B5CF6" },
+  { "id": "dept_infra", "name": "Infraestructura", "color": "#F59E0B" },
+  { "id": "dept_soporte", "name": "Soporte", "color": "#EF4444" }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "notif_test_1770419317.343598",
+    "type": "escalation",
+    "title": "Notificación de Prueba",
+    "message": "Esta es una notificación de prueba para verificar el sistema",
+    "data": {
+      "action_url": "/escalations"
+    },
+    "user_id": null,
+    "read": false,
+    "created_at": "2026-02-06T23:08:37.343598+00:00",
+    "read_at": null
+  }
+]

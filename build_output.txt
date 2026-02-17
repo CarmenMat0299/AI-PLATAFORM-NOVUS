@@ -1,0 +1,582 @@
+﻿az : WARNING: Packing source code into tar to upload...
+En línea: 1 Carácter: 87
++ ... NG='utf-8'; az acr build --registry acrnovus --image chatbot-novus:la ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: Packin...ar to upload...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: Excluding '.git' based on default ignore rules
+WARNING: Excluding '.gitignore' based on default ignore rules
+WARNING: Uploading archived source code from 
+'C:\Users\ANALUC~1\AppData\Local\Temp\build_archive_282ca57746804349a2e7e72cc48d0549.tar.gz'...
+WARNING: Sending context (40.961 MiB) to registry: acrnovus...
+WARNING: Queued a build with ID: ch3x
+WARNING: Waiting for an agent...
+2026/01/27 15:43:24 Downloading source code...
+
+2026/01/27 15:43:26 Finished downloading source code
+
+2026/01/27 15:43:26 Using acb_vol_c50077ea-a748-47e2-a484-035f6a9d1dd8 as the home volume
+2026/01/27 15:43:26 Setting up Docker configuration...
+2026/01/27 15:43:27 Successfully set up Docker configuration
+2026/01/27 15:43:27 Logging in to registry: acrnovus.azurecr.io
+2026/01/27 15:43:27 Successfully logged into acrnovus.azurecr.io
+2026/01/27 15:43:27 Executing step ID: build. Timeout(sec): 28800, Working directory: '', Network: ''
+2026/01/27 15:43:27 Scanning for dependencies...
+2026/01/27 15:43:28 Successfully scanned dependencies
+2026/01/27 15:43:28 Launching container with name: build
+Sending build context to Docker daemon  112.2MB
+
+
+
+Step 1/13 : FROM python:3.11-slim
+3.11-slim: Pulling from library/python
+119d43eec815: Pulling fs layer
+5b09819094bb: Pulling fs layer
+3e731abb5c1d: Pulling fs layer
+0b2bf04f68e9: Pulling fs layer
+0b2bf04f68e9: Waiting
+5b09819094bb: Download complete
+0b2bf04f68e9: Verifying Checksum
+0b2bf04f68e9: Download complete
+3e731abb5c1d: Verifying Checksum
+3e731abb5c1d: Download complete
+119d43eec815: Verifying Checksum
+119d43eec815: Download complete
+119d43eec815: Pull complete
+
+5b09819094bb: Pull complete
+3e731abb5c1d: Pull complete
+0b2bf04f68e9: Pull complete
+Digest: sha256:5be45dbade29bebd6886af6b438fd7e0b4eb7b611f39ba62b430263f82de36d2
+Status: Downloaded newer image for python:3.11-slim
+ ---> fa659464a114
+Step 2/13 : WORKDIR /app
+ ---> Running in 0c670257db7f
+Removing intermediate container 0c670257db7f
+ ---> 1277b287af6a
+Step 3/13 : RUN apt-get update && apt-get install -y     gcc     g++     ffmpeg     && rm -rf /var/lib/apt/lists/*
+ ---> Running in 7edf8066e5ed
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9670 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [97.9 kB]
+Fetched 9864 kB in 1s (12.1 MB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  adwaita-icon-theme alsa-topology-conf alsa-ucm-conf at-spi2-common
+  at-spi2-core binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+  cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dbus dbus-bin dbus-daemon
+  dbus-session-bus-common dbus-system-bus-common dbus-user-session
+  dconf-gsettings-backend dconf-service dmsetup fontconfig fontconfig-config
+  fonts-dejavu-core fonts-dejavu-mono g++-14 g++-14-x86-64-linux-gnu
+
+  g++-x86-64-linux-gnu gcc-14 gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu
+  gsettings-desktop-schemas gtk-update-icon-cache hicolor-icon-theme
+  i965-va-driver intel-media-va-driver krb5-locales libaacs0 libaom3
+  libapparmor1 libasan8 libasound2-data libasound2t64 libass9 libasyncns0
+  libatk-bridge2.0-0t64 libatk1.0-0t64 libatomic1 libatspi2.0-0t64
+  libavahi-client3 libavahi-common-data libavahi-common3 libavc1394-0
+  libavcodec61 libavdevice61 libavfilter10 libavformat61 libavutil59
+  libbdplus0 libbinutils libblas3 libbluray2 libbrotli1 libbs2b0 libc-dev-bin
+  libc6-dev libcaca0 libcairo-gobject2 libcairo2 libcc1-0 libcdio-cdda2t64
+  libcdio-paranoia2t64 libcdio19t64 libchromaprint1 libcjson1
+  libcloudproviders0 libcodec2-1.2 libcolord2 libcom-err2 libcrypt-dev
+  libcryptsetup12 libctf-nobfd0 libctf0 libcups2t64 libdatrie1 libdav1d7
+  libdbus-1-3 libdc1394-25 libdconf1 libdecor-0-0 libdecor-0-plugin-1-gtk
+  libdeflate0 libdevmapper1.02.1 libdrm-amdgpu1 libdrm-common libdrm-intel1
+  libdrm2 libdvdnav4 libdvdread8t64 libedit2 libelf1t64 libepoxy0 libexpat1
+  libfftw3-double3 libflac14 libflite1 libfontconfig1 libfreetype6 libfribidi0
+  libgbm1 libgcc-14-dev libgcrypt20 libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin
+  libgdk-pixbuf2.0-common libgfortran5 libgl1 libgl1-mesa-dri libglib2.0-0t64
+  libglib2.0-data libglvnd0 libglx-mesa0 libglx0 libgme0 libgnutls30t64
+  libgomp1 libgpg-error-l10n libgpg-error0 libgprofng0 libgraphite2-3 libgsm1
+  libgssapi-krb5-2 libgtk-3-0t64 libgtk-3-bin libgtk-3-common libharfbuzz0b
+  libhwasan0 libhwy1t64 libidn2-0 libiec61883-0 libigdgmm12 libisl23 libitm1
+  libjack-jackd2-0 libjansson4 libjbig0 libjpeg62-turbo libjson-c5 libjxl0.11
+  libk5crypto3 libkeyutils1 libkmod2 libkrb5-3 libkrb5support0 liblapack3
+  liblcms2-2 liblerc4 liblilv-0-0 libllvm19 liblsan0 libmbedcrypto16
+  libmp3lame0 libmpc3 libmpfr6 libmpg123-0t64 libmysofa1 libnorm1t64
+  libnss-systemd libnuma1 libogg0 libopenal-data libopenal1 libopenjp2-7
+  libopenmpt0t64 libopus0 libp11-kit0 libpam-systemd libpango-1.0-0
+  libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libpgm-5.3-0t64
+  libpixman-1-0 libplacebo349 libpng16-16t64 libpocketsphinx3 libpostproc58
+  libproc2-0 libpulse0 libquadmath0 librabbitmq4 librav1e0.7 libraw1394-11
+  librist4 librsvg2-2 librsvg2-common librubberband2 libsamplerate0
+  libsdl2-2.0-0 libsensors-config libsensors5 libserd-0-0 libsframe1
+  libsharpyuv0 libshine3 libslang2 libsnappy1v5 libsndfile1 libsodium23
+  libsord-0-0 libsoxr0 libspeex1 libsphinxbase3t64 libsratom-0-0
+  libsrt1.5-gnutls libssh-4 libstdc++-14-dev libsvtav1enc2 libswresample5
+  libswscale8 libsystemd-shared libtasn1-6 libthai-data libthai0 libtheoradec1
+  libtheoraenc1 libtiff6 libtsan2 libtwolame0 libubsan1 libudfread0
+  libunibreak6 libunistring5 libusb-1.0-0 libva-drm2 libva-x11-2 libva2
+  libvdpau-va-gl1 libvdpau1 libvidstab1.1 libvorbis0a libvorbisenc2
+  libvorbisfile3 libvpl2 libvpx9 libvulkan1 libwayland-client0
+  libwayland-cursor0 libwayland-egl1 libwayland-server0 libwebp7 libwebpmux3
+  libx11-6 libx11-data libx11-xcb1 libx264-164 libx265-215 libxau6
+  libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-render0
+  libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb1 libxcomposite1
+  libxcursor1 libxdamage1 libxdmcp6 libxext6 libxfixes3 libxi6 libxinerama1
+  libxkbcommon0 libxml2 libxrandr2 libxrender1 libxshmfence1 libxss1 libxtst6
+  libxv1 libxvidcore4 libxxf86vm1 libz3-4 libzimg2 libzix-0-0 libzmq5
+  libzvbi-common libzvbi0t64 linux-libc-dev linux-sysctl-defaults manpages
+  manpages-dev mesa-libgallium mesa-va-drivers mesa-vdpau-drivers
+  mesa-vulkan-drivers ocl-icd-libopencl1 pocketsphinx-en-us procps psmisc
+  rpcsvc-proto shared-mime-info systemd systemd-cryptsetup systemd-sysv
+  systemd-timesyncd va-driver-all vdpau-driver-all x11-common xdg-user-dirs
+  xkb-data
+Suggested packages:
+  adwaita-icon-theme-legacy binutils-doc gprofng-gui binutils-gold cpp-doc
+  gcc-14-locales cpp-14-doc ffmpeg-doc g++-multilib g++-14-multilib gcc-14-doc
+  gcc-multilib make autoconf automake libtool flex bison gdb gcc-doc
+  gcc-14-multilib gdb-x86-64-linux-gnu i965-va-driver-shaders alsa-utils
+  libasound2-plugins libcuda1 libnvcuvid1 libnvidia-encode1 libbluray-bdj
+  libc-devtools glibc-doc colord cups-common libdvdcss2 libfftw3-bin
+  libfftw3-dev rng-tools low-memory-monitor gnutls-bin krb5-doc krb5-user gvfs
+  jackd2 liblcms2-utils libtss2-rc0t64 libportaudio2 libsndio7.0 opus-tools
+  pciutils pulseaudio libraw1394-doc librsvg2-bin xdg-utils lm-sensors serdi
+  sordi speex libstdc++-14-doc libarchive13t64 libbpf1 libdw1t64 libfido2-1
+  libip4tc2 libpwquality1 libqrencode4 man-browser opencl-icd
+  systemd-container systemd-homed systemd-userdbd systemd-boot
+  systemd-resolved systemd-repart libtss2-tcti-device0 polkitd
+  nvidia-vdpau-driver nvidia-tesla-440-vdpau-driver
+  nvidia-tesla-418-vdpau-driver nvidia-legacy-390xx-vdpau-driver
+  nvidia-legacy-340xx-vdpau-driver
+The following NEW packages will be installed:
+  adwaita-icon-theme alsa-topology-conf alsa-ucm-conf at-spi2-common
+  at-spi2-core binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+  cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dbus dbus-bin dbus-daemon
+  dbus-session-bus-common dbus-system-bus-common dbus-user-session
+  dconf-gsettings-backend dconf-service dmsetup ffmpeg fontconfig
+  fontconfig-config fonts-dejavu-core fonts-dejavu-mono g++ g++-14
+  g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+  gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu gsettings-desktop-schemas
+  gtk-update-icon-cache hicolor-icon-theme i965-va-driver
+  intel-media-va-driver krb5-locales libaacs0 libaom3 libapparmor1 libasan8
+  libasound2-data libasound2t64 libass9 libasyncns0 libatk-bridge2.0-0t64
+  libatk1.0-0t64 libatomic1 libatspi2.0-0t64 libavahi-client3
+  libavahi-common-data libavahi-common3 libavc1394-0 libavcodec61
+  libavdevice61 libavfilter10 libavformat61 libavutil59 libbdplus0 libbinutils
+  libblas3 libbluray2 libbrotli1 libbs2b0 libc-dev-bin libc6-dev libcaca0
+  libcairo-gobject2 libcairo2 libcc1-0 libcdio-cdda2t64 libcdio-paranoia2t64
+  libcdio19t64 libchromaprint1 libcjson1 libcloudproviders0 libcodec2-1.2
+  libcolord2 libcom-err2 libcrypt-dev libcryptsetup12 libctf-nobfd0 libctf0
+  libcups2t64 libdatrie1 libdav1d7 libdbus-1-3 libdc1394-25 libdconf1
+  libdecor-0-0 libdecor-0-plugin-1-gtk libdeflate0 libdevmapper1.02.1
+  libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm2 libdvdnav4 libdvdread8t64
+  libedit2 libelf1t64 libepoxy0 libexpat1 libfftw3-double3 libflac14 libflite1
+  libfontconfig1 libfreetype6 libfribidi0 libgbm1 libgcc-14-dev libgcrypt20
+  libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common
+  libgfortran5 libgl1 libgl1-mesa-dri libglib2.0-0t64 libglib2.0-data
+  libglvnd0 libglx-mesa0 libglx0 libgme0 libgnutls30t64 libgomp1
+  libgpg-error-l10n libgpg-error0 libgprofng0 libgraphite2-3 libgsm1
+  libgssapi-krb5-2 libgtk-3-0t64 libgtk-3-bin libgtk-3-common libharfbuzz0b
+  libhwasan0 libhwy1t64 libidn2-0 libiec61883-0 libigdgmm12 libisl23 libitm1
+  libjack-jackd2-0 libjansson4 libjbig0 libjpeg62-turbo libjson-c5 libjxl0.11
+  libk5crypto3 libkeyutils1 libkmod2 libkrb5-3 libkrb5support0 liblapack3
+  liblcms2-2 liblerc4 liblilv-0-0 libllvm19 liblsan0 libmbedcrypto16
+  libmp3lame0 libmpc3 libmpfr6 libmpg123-0t64 libmysofa1 libnorm1t64
+  libnss-systemd libnuma1 libogg0 libopenal-data libopenal1 libopenjp2-7
+  libopenmpt0t64 libopus0 libp11-kit0 libpam-systemd libpango-1.0-0
+  libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libpgm-5.3-0t64
+  libpixman-1-0 libplacebo349 libpng16-16t64 libpocketsphinx3 libpostproc58
+  libproc2-0 libpulse0 libquadmath0 librabbitmq4 librav1e0.7 libraw1394-11
+  librist4 librsvg2-2 librsvg2-common librubberband2 libsamplerate0
+  libsdl2-2.0-0 libsensors-config libsensors5 libserd-0-0 libsframe1
+  libsharpyuv0 libshine3 libslang2 libsnappy1v5 libsndfile1 libsodium23
+  libsord-0-0 libsoxr0 libspeex1 libsphinxbase3t64 libsratom-0-0
+  libsrt1.5-gnutls libssh-4 libstdc++-14-dev libsvtav1enc2 libswresample5
+  libswscale8 libsystemd-shared libtasn1-6 libthai-data libthai0 libtheoradec1
+  libtheoraenc1 libtiff6 libtsan2 libtwolame0 libubsan1 libudfread0
+  libunibreak6 libunistring5 libusb-1.0-0 libva-drm2 libva-x11-2 libva2
+  libvdpau-va-gl1 libvdpau1 libvidstab1.1 libvorbis0a libvorbisenc2
+  libvorbisfile3 libvpl2 libvpx9 libvulkan1 libwayland-client0
+  libwayland-cursor0 libwayland-egl1 libwayland-server0 libwebp7 libwebpmux3
+  libx11-6 libx11-data libx11-xcb1 libx264-164 libx265-215 libxau6
+  libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-render0
+  libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb1 libxcomposite1
+  libxcursor1 libxdamage1 libxdmcp6 libxext6 libxfixes3 libxi6 libxinerama1
+  libxkbcommon0 libxml2 libxrandr2 libxrender1 libxshmfence1 libxss1 libxtst6
+  libxv1 libxvidcore4 libxxf86vm1 libz3-4 libzimg2 libzix-0-0 libzmq5
+  libzvbi-common libzvbi0t64 linux-libc-dev linux-sysctl-defaults manpages
+  manpages-dev mesa-libgallium mesa-va-drivers mesa-vdpau-drivers
+  mesa-vulkan-drivers ocl-icd-libopencl1 pocketsphinx-en-us procps psmisc
+  rpcsvc-proto shared-mime-info systemd systemd-cryptsetup systemd-sysv
+  systemd-timesyncd va-driver-all vdpau-driver-all x11-common xdg-user-dirs
+  xkb-data
+
+0 upgraded, 318 newly installed, 0 to remove and 0 not upgraded.
+Need to get 272 MB of archives.
+After this operation, 1003 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 libsystemd-shared amd64 257.9-1~deb13u1 [2151 kB]
+Get:2 http://deb.debian.org/debian trixie/main amd64 libapparmor1 amd64 4.1.0-1 [43.7 kB]
+Get:3 http://deb.debian.org/debian trixie/main amd64 systemd amd64 257.9-1~deb13u1 [3096 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 systemd-sysv amd64 257.9-1~deb13u1 [64.5 kB]
+Get:5 http://deb.debian.org/debian trixie/main amd64 libdbus-1-3 amd64 1.16.2-2 [178 kB]
+Get:6 http://deb.debian.org/debian trixie/main amd64 dbus-bin amd64 1.16.2-2 [80.0 kB]
+Get:7 http://deb.debian.org/debian trixie/main amd64 dbus-session-bus-common all 1.16.2-2 [52.3 kB]
+Get:8 http://deb.debian.org/debian trixie/main amd64 libexpat1 amd64 2.7.1-2 [108 kB]
+Get:9 http://deb.debian.org/debian trixie/main amd64 dbus-daemon amd64 1.16.2-2 [159 kB]
+Get:10 http://deb.debian.org/debian trixie/main amd64 dbus-system-bus-common all 1.16.2-2 [53.5 kB]
+Get:11 http://deb.debian.org/debian trixie/main amd64 dbus amd64 1.16.2-2 [71.6 kB]
+Get:12 http://deb.debian.org/debian trixie/main amd64 linux-sysctl-defaults all 4.12 [5624 B]
+Get:13 http://deb.debian.org/debian trixie/main amd64 libproc2-0 amd64 2:4.0.4-9 [65.6 kB]
+Get:14 http://deb.debian.org/debian trixie/main amd64 procps amd64 2:4.0.4-9 [882 kB]
+Get:15 http://deb.debian.org/debian trixie/main amd64 krb5-locales all 1.21.3-5 [101 kB]
+Get:16 http://deb.debian.org/debian trixie/main amd64 libnss-systemd amd64 257.9-1~deb13u1 [218 kB]
+Get:17 http://deb.debian.org/debian trixie/main amd64 libpam-systemd amd64 257.9-1~deb13u1 [297 kB]
+Get:18 http://deb.debian.org/debian trixie/main amd64 manpages all 6.9.1-1 [1393 kB]
+Get:19 http://deb.debian.org/debian trixie/main amd64 systemd-timesyncd amd64 257.9-1~deb13u1 [93.0 kB]
+Get:20 http://deb.debian.org/debian trixie/main amd64 libgdk-pixbuf2.0-common all 2.42.12+dfsg-4 [311 kB]
+Get:21 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+Get:22 http://deb.debian.org/debian trixie/main amd64 libglib2.0-0t64 amd64 2.84.4-3~deb13u2 [1518 kB]
+Get:23 http://deb.debian.org/debian trixie/main amd64 libxml2 amd64 2.12.7+dfsg+really2.9.14-2.1+deb13u2 [698 kB]
+Get:24 http://deb.debian.org/debian trixie/main amd64 shared-mime-info amd64 2.4-5+b2 [760 kB]
+Get:25 http://deb.debian.org/debian trixie/main amd64 libjpeg62-turbo amd64 1:2.1.5-4 [168 kB]
+Get:26 http://deb.debian.org/debian trixie/main amd64 libpng16-16t64 amd64 1.6.48-1+deb13u1 [283 kB]
+Get:27 http://deb.debian.org/debian trixie/main amd64 libdeflate0 amd64 1.23-2 [47.3 kB]
+Get:28 http://deb.debian.org/debian trixie/main amd64 libjbig0 amd64 2.1-6.1+b2 [32.1 kB]
+Get:29 http://deb.debian.org/debian trixie/main amd64 liblerc4 amd64 4.0.0+ds-5 [183 kB]
+Get:30 http://deb.debian.org/debian trixie/main amd64 libsharpyuv0 amd64 1.5.0-0.1 [116 kB]
+Get:31 http://deb.debian.org/debian trixie/main amd64 libwebp7 amd64 1.5.0-0.1 [318 kB]
+Get:32 http://deb.debian.org/debian trixie/main amd64 libtiff6 amd64 4.7.0-3+deb13u1 [346 kB]
+Get:33 http://deb.debian.org/debian trixie/main amd64 libgdk-pixbuf-2.0-0 amd64 2.42.12+dfsg-4 [141 kB]
+Get:34 http://deb.debian.org/debian trixie/main amd64 gtk-update-icon-cache amd64 4.18.6+ds-2 [52.7 kB]
+Get:35 http://deb.debian.org/debian trixie/main amd64 hicolor-icon-theme all 0.18-2 [11.8 kB]
+Get:36 http://deb.debian.org/debian trixie/main amd64 adwaita-icon-theme all 48.1-1 [504 kB]
+Get:37 http://deb.debian.org/debian trixie/main amd64 alsa-topology-conf all 1.2.5.1-3 [15.3 kB]
+Get:38 http://deb.debian.org/debian trixie/main amd64 libasound2-data all 1.2.14-1 [21.1 kB]
+Get:39 http://deb.debian.org/debian trixie/main amd64 libasound2t64 amd64 1.2.14-1 [381 kB]
+Get:40 http://deb.debian.org/debian trixie/main amd64 alsa-ucm-conf all 1.2.14-1 [92.5 kB]
+Get:41 http://deb.debian.org/debian trixie/main amd64 at-spi2-common all 2.56.2-1+deb13u1 [171 kB]
+Get:42 http://deb.debian.org/debian trixie/main amd64 libxau6 amd64 1:1.0.11-1 [20.4 kB]
+Get:43 http://deb.debian.org/debian trixie/main amd64 libxdmcp6 amd64 1:1.1.5-1 [27.8 kB]
+Get:44 http://deb.debian.org/debian trixie/main amd64 libxcb1 amd64 1.17.0-2+b1 [144 kB]
+Get:45 http://deb.debian.org/debian trixie/main amd64 libx11-data all 2:1.8.12-1 [343 kB]
+Get:46 http://deb.debian.org/debian trixie/main amd64 libx11-6 amd64 2:1.8.12-1 [815 kB]
+Get:47 http://deb.debian.org/debian trixie/main amd64 libxext6 amd64 2:1.3.4-1+b3 [50.4 kB]
+Get:48 http://deb.debian.org/debian trixie/main amd64 libxi6 amd64 2:1.8.2-1 [78.9 kB]
+Get:49 http://deb.debian.org/debian trixie/main amd64 libatspi2.0-0t64 amd64 2.56.2-1+deb13u1 [80.7 kB]
+Get:50 http://deb.debian.org/debian trixie/main amd64 x11-common all 1:7.7+24+deb13u1 [217 kB]
+Get:51 http://deb.debian.org/debian trixie/main amd64 libxtst6 amd64 2:1.2.5-1 [25.8 kB]
+Get:52 http://deb.debian.org/debian trixie/main amd64 dbus-user-session amd64 1.16.2-2 [52.1 kB]
+Get:53 http://deb.debian.org/debian trixie/main amd64 libdconf1 amd64 0.40.0-5 [41.8 kB]
+Get:54 http://deb.debian.org/debian trixie/main amd64 dconf-service amd64 0.40.0-5 [32.4 kB]
+Get:55 http://deb.debian.org/debian trixie/main amd64 dconf-gsettings-backend amd64 0.40.0-5 [28.6 kB]
+Get:56 http://deb.debian.org/debian trixie/main amd64 gsettings-desktop-schemas all 48.0-1 [700 kB]
+Get:57 http://deb.debian.org/debian trixie/main amd64 at-spi2-core amd64 2.56.2-1+deb13u1 [61.6 kB]
+Get:58 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+Get:59 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+Get:60 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+Get:61 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+Get:62 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+Get:63 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+Get:64 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+Get:65 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+Get:66 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+Get:67 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+Get:68 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+Get:69 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+Get:70 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+Get:71 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+Get:72 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+Get:73 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+Get:74 http://deb.debian.org/debian trixie/main amd64 libdevmapper1.02.1 amd64 2:1.02.205-2 [135 kB]
+Get:75 http://deb.debian.org/debian trixie/main amd64 dmsetup amd64 2:1.02.205-2 [82.3 kB]
+Get:76 http://deb.debian.org/debian trixie/main amd64 libaom3 amd64 3.12.1-1 [1871 kB]
+Get:77 http://deb.debian.org/debian trixie/main amd64 libdrm-common all 2.4.124-2 [8288 B]
+Get:78 http://deb.debian.org/debian trixie/main amd64 libdrm2 amd64 2.4.124-2 [39.0 kB]
+Get:79 http://deb.debian.org/debian trixie/main amd64 libva2 amd64 2.22.0-3 [79.4 kB]
+Get:80 http://deb.debian.org/debian trixie/main amd64 libva-drm2 amd64 2.22.0-3 [18.3 kB]
+Get:81 http://deb.debian.org/debian trixie/main amd64 libx11-xcb1 amd64 2:1.8.12-1 [247 kB]
+Get:82 http://deb.debian.org/debian trixie/main amd64 libxcb-dri3-0 amd64 1.17.0-2+b1 [107 kB]
+Get:83 http://deb.debian.org/debian trixie/main amd64 libxfixes3 amd64 1:6.0.0-2+b4 [20.2 kB]
+Get:84 http://deb.debian.org/debian trixie/main amd64 libva-x11-2 amd64 2.22.0-3 [23.1 kB]
+Get:85 http://deb.debian.org/debian trixie/main amd64 libvdpau1 amd64 1.5-3+b1 [27.2 kB]
+Get:86 http://deb.debian.org/debian trixie/main amd64 libvpl2 amd64 1:2.14.0-1+b1 [129 kB]
+Get:87 http://deb.debian.org/debian trixie/main amd64 ocl-icd-libopencl1 amd64 2.3.3-1 [42.9 kB]
+
+Get:88 http://deb.debian.org/debian trixie/main amd64 libavutil59 amd64 7:7.1.3-0+deb13u1 [417 kB]
+Get:89 http://deb.debian.org/debian trixie/main amd64 libbrotli1 amd64 1.1.0-2+b7 [307 kB]
+Get:90 http://deb.debian.org/debian trixie/main amd64 libfreetype6 amd64 2.13.3+dfsg-1 [452 kB]
+Get:91 http://deb.debian.org/debian trixie/main amd64 fonts-dejavu-mono all 2.37-8 [489 kB]
+Get:92 http://deb.debian.org/debian trixie/main amd64 fonts-dejavu-core all 2.37-8 [840 kB]
+Get:93 http://deb.debian.org/debian trixie/main amd64 fontconfig-config amd64 2.15.0-2.3 [318 kB]
+Get:94 http://deb.debian.org/debian trixie/main amd64 libfontconfig1 amd64 2.15.0-2.3 [392 kB]
+Get:95 http://deb.debian.org/debian trixie/main amd64 libpixman-1-0 amd64 0.44.0-3 [248 kB]
+Get:96 http://deb.debian.org/debian trixie/main amd64 libxcb-render0 amd64 1.17.0-2+b1 [115 kB]
+Get:97 http://deb.debian.org/debian trixie/main amd64 libxcb-shm0 amd64 1.17.0-2+b1 [105 kB]
+Get:98 http://deb.debian.org/debian trixie/main amd64 libxrender1 amd64 1:0.9.12-1 [27.9 kB]
+Get:99 http://deb.debian.org/debian trixie/main amd64 libcairo2 amd64 1.18.4-1+b1 [538 kB]
+Get:100 http://deb.debian.org/debian trixie/main amd64 libcodec2-1.2 amd64 1.2.0-3 [8170 kB]
+Get:101 http://deb.debian.org/debian trixie/main amd64 libdav1d7 amd64 1.5.1-1 [559 kB]
+Get:102 http://deb.debian.org/debian trixie/main amd64 libgsm1 amd64 1.0.22-1+b2 [29.3 kB]
+Get:103 http://deb.debian.org/debian trixie/main amd64 libhwy1t64 amd64 1.2.0-2+b2 [676 kB]
+Get:104 http://deb.debian.org/debian trixie/main amd64 liblcms2-2 amd64 2.16-2 [160 kB]
+Get:105 http://deb.debian.org/debian trixie/main amd64 libjxl0.11 amd64 0.11.1-4 [1132 kB]
+Get:106 http://deb.debian.org/debian trixie/main amd64 libmp3lame0 amd64 3.100-6+b3 [363 kB]
+Get:107 http://deb.debian.org/debian trixie/main amd64 libopenjp2-7 amd64 2.5.3-2.1~deb13u1 [205 kB]
+Get:108 http://deb.debian.org/debian trixie/main amd64 libopus0 amd64 1.5.2-2 [2852 kB]
+Get:109 http://deb.debian.org/debian trixie/main amd64 librav1e0.7 amd64 0.7.1-9+b2 [946 kB]
+Get:110 http://deb.debian.org/debian trixie/main amd64 libcairo-gobject2 amd64 1.18.4-1+b1 [130 kB]
+Get:111 http://deb.debian.org/debian trixie/main amd64 fontconfig amd64 2.15.0-2.3 [463 kB]
+Get:112 http://deb.debian.org/debian trixie/main amd64 libfribidi0 amd64 1.0.16-1 [26.5 kB]
+Get:113 http://deb.debian.org/debian trixie/main amd64 libgraphite2-3 amd64 1.3.14-2+b1 [75.4 kB]
+Get:114 http://deb.debian.org/debian trixie/main amd64 libharfbuzz0b amd64 10.2.0-1+b1 [479 kB]
+Get:115 http://deb.debian.org/debian trixie/main amd64 libthai-data all 0.1.29-2 [168 kB]
+Get:116 http://deb.debian.org/debian trixie/main amd64 libdatrie1 amd64 0.2.13-3+b1 [38.1 kB]
+Get:117 http://deb.debian.org/debian trixie/main amd64 libthai0 amd64 0.1.29-2+b1 [49.4 kB]
+Get:118 http://deb.debian.org/debian trixie/main amd64 libpango-1.0-0 amd64 1.56.3-1 [226 kB]
+Get:119 http://deb.debian.org/debian trixie/main amd64 libpangoft2-1.0-0 amd64 1.56.3-1 [55.6 kB]
+Get:120 http://deb.debian.org/debian trixie/main amd64 libpangocairo-1.0-0 amd64 1.56.3-1 [35.7 kB]
+Get:121 http://deb.debian.org/debian trixie/main amd64 librsvg2-2 amd64 2.60.0+dfsg-1 [1789 kB]
+Get:122 http://deb.debian.org/debian trixie/main amd64 libshine3 amd64 3.1.1-2+b2 [23.1 kB]
+Get:123 http://deb.debian.org/debian trixie/main amd64 libsnappy1v5 amd64 1.2.2-1 [29.3 kB]
+Get:124 http://deb.debian.org/debian trixie/main amd64 libspeex1 amd64 1.2.1-3 [56.8 kB]
+Get:125 http://deb.debian.org/debian trixie/main amd64 libsvtav1enc2 amd64 2.3.0+dfsg-1 [2489 kB]
+Get:126 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+Get:127 http://deb.debian.org/debian trixie/main amd64 libsoxr0 amd64 0.1.3-4+b2 [81.0 kB]
+Get:128 http://deb.debian.org/debian trixie/main amd64 libswresample5 amd64 7:7.1.3-0+deb13u1 [101 kB]
+Get:129 http://deb.debian.org/debian trixie/main amd64 libtheoradec1 amd64 1.2.0~alpha1+dfsg-6 [58.4 kB]
+Get:130 http://deb.debian.org/debian trixie/main amd64 libogg0 amd64 1.3.5-3+b2 [23.8 kB]
+Get:131 http://deb.debian.org/debian trixie/main amd64 libtheoraenc1 amd64 1.2.0~alpha1+dfsg-6 [108 kB]
+Get:132 http://deb.debian.org/debian trixie/main amd64 libtwolame0 amd64 0.4.0-2+b2 [51.3 kB]
+Get:133 http://deb.debian.org/debian trixie/main amd64 libvorbis0a amd64 1.3.7-3 [90.0 kB]
+Get:134 http://deb.debian.org/debian trixie/main amd64 libvorbisenc2 amd64 1.3.7-3 [75.4 kB]
+Get:135 http://deb.debian.org/debian trixie/main amd64 libvpx9 amd64 1.15.0-2.1 [1115 kB]
+Get:136 http://deb.debian.org/debian trixie/main amd64 libwebpmux3 amd64 1.5.0-0.1 [126 kB]
+Get:137 http://deb.debian.org/debian trixie/main amd64 libx264-164 amd64 2:0.164.3108+git31e19f9-2+b1 [558 kB]
+Get:138 http://deb.debian.org/debian trixie/main amd64 libnuma1 amd64 2.0.19-1 [22.2 kB]
+Get:139 http://deb.debian.org/debian trixie/main amd64 libx265-215 amd64 4.1-2 [1237 kB]
+Get:140 http://deb.debian.org/debian trixie/main amd64 libxvidcore4 amd64 2:1.3.7-1+b2 [252 kB]
+Get:141 http://deb.debian.org/debian trixie/main amd64 libzvbi-common all 0.2.44-1 [71.4 kB]
+Get:142 http://deb.debian.org/debian trixie/main amd64 libzvbi0t64 amd64 0.2.44-1 [278 kB]
+Get:143 http://deb.debian.org/debian trixie/main amd64 libavcodec61 amd64 7:7.1.3-0+deb13u1 [5808 kB]
+Get:144 http://deb.debian.org/debian trixie/main amd64 libraw1394-11 amd64 2.1.2-2+b2 [38.8 kB]
+Get:145 http://deb.debian.org/debian trixie/main amd64 libavc1394-0 amd64 0.5.4-5+b2 [18.2 kB]
+Get:146 http://deb.debian.org/debian trixie/main amd64 libunibreak6 amd64 6.1-3 [21.9 kB]
+Get:147 http://deb.debian.org/debian trixie/main amd64 libass9 amd64 1:0.17.3-1+b1 [114 kB]
+Get:148 http://deb.debian.org/debian trixie/main amd64 libudfread0 amd64 1.1.2-1+b2 [17.7 kB]
+Get:149 http://deb.debian.org/debian trixie/main amd64 libbluray2 amd64 1:1.3.4-1+b2 [138 kB]
+Get:150 http://deb.debian.org/debian trixie/main amd64 libchromaprint1 amd64 1.5.1-7 [42.9 kB]
+Get:151 http://deb.debian.org/debian trixie/main amd64 libdvdread8t64 amd64 6.1.3-2 [86.2 kB]
+Get:152 http://deb.debian.org/debian trixie/main amd64 libdvdnav4 amd64 6.1.1-3+b1 [44.5 kB]
+Get:153 http://deb.debian.org/debian trixie/main amd64 libgme0 amd64 0.6.3-7+b2 [131 kB]
+Get:154 http://deb.debian.org/debian trixie/main amd64 libunistring5 amd64 1.3-2 [477 kB]
+Get:155 http://deb.debian.org/debian trixie/main amd64 libidn2-0 amd64 2.3.8-2 [109 kB]
+Get:156 http://deb.debian.org/debian trixie/main amd64 libp11-kit0 amd64 0.25.5-3 [425 kB]
+Get:157 http://deb.debian.org/debian trixie/main amd64 libtasn1-6 amd64 4.20.0-2 [49.9 kB]
+Get:158 http://deb.debian.org/debian trixie/main amd64 libgnutls30t64 amd64 3.8.9-3+deb13u1 [1466 kB]
+Get:159 http://deb.debian.org/debian trixie/main amd64 libmpg123-0t64 amd64 1.32.10-1 [149 kB]
+Get:160 http://deb.debian.org/debian trixie/main amd64 libvorbisfile3 amd64 1.3.7-3 [20.9 kB]
+Get:161 http://deb.debian.org/debian trixie/main amd64 libopenmpt0t64 amd64 0.7.13-1+b1 [855 kB]
+Get:162 http://deb.debian.org/debian trixie/main amd64 librabbitmq4 amd64 0.15.0-1 [41.8 kB]
+Get:163 http://deb.debian.org/debian trixie/main amd64 libcjson1 amd64 1.7.18-3.1+deb13u1 [29.8 kB]
+Get:164 http://deb.debian.org/debian trixie/main amd64 libmbedcrypto16 amd64 3.6.5-0.1~deb13u1 [361 kB]
+Get:165 http://deb.debian.org/debian trixie/main amd64 librist4 amd64 0.2.11+dfsg-1 [72.1 kB]
+Get:166 http://deb.debian.org/debian trixie/main amd64 libsrt1.5-gnutls amd64 1.5.4-1 [345 kB]
+Get:167 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5 [33.0 kB]
+Get:168 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b7 [25.0 kB]
+Get:169 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5 [81.5 kB]
+Get:170 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+Get:171 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5 [326 kB]
+Get:172 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5 [138 kB]
+Get:173 http://deb.debian.org/debian trixie/main amd64 libssh-4 amd64 0.11.2-1+deb13u1 [209 kB]
+Get:174 http://deb.debian.org/debian trixie/main amd64 libnorm1t64 amd64 1.5.9+dfsg-3.1+b2 [221 kB]
+
+Get:175 http://deb.debian.org/debian trixie/main amd64 libpgm-5.3-0t64 amd64 5.3.128~dfsg-2.1+b1 [162 kB]
+Get:176 http://deb.debian.org/debian-security trixie-security/main amd64 libsodium23 amd64 1.0.18-1+deb13u1 [165 kB]
+Get:177 http://deb.debian.org/debian trixie/main amd64 libzmq5 amd64 4.3.5-1+b3 [283 kB]
+Get:178 http://deb.debian.org/debian trixie/main amd64 libavformat61 amd64 7:7.1.3-0+deb13u1 [1193 kB]
+Get:179 http://deb.debian.org/debian trixie/main amd64 libbs2b0 amd64 3.1.0+dfsg-8+b1 [12.5 kB]
+Get:180 http://deb.debian.org/debian trixie/main amd64 libflite1 amd64 2.2-7 [12.8 MB]
+Get:181 http://deb.debian.org/debian trixie/main amd64 libserd-0-0 amd64 0.32.4-1 [47.0 kB]
+Get:182 http://deb.debian.org/debian trixie/main amd64 libzix-0-0 amd64 0.6.2-1 [23.1 kB]
+Get:183 http://deb.debian.org/debian trixie/main amd64 libsord-0-0 amd64 0.16.18-1 [18.0 kB]
+Get:184 http://deb.debian.org/debian trixie/main amd64 libsratom-0-0 amd64 0.6.18-1 [17.7 kB]
+Get:185 http://deb.debian.org/debian trixie/main amd64 liblilv-0-0 amd64 0.24.26-1 [43.5 kB]
+Get:186 http://deb.debian.org/debian trixie/main amd64 libmysofa1 amd64 1.3.3+dfsg-1 [1158 kB]
+Get:187 http://deb.debian.org/debian trixie/main amd64 libvulkan1 amd64 1.4.309.0-1 [130 kB]
+Get:188 http://deb.debian.org/debian trixie/main amd64 libplacebo349 amd64 7.349.0-3 [2542 kB]
+Get:189 http://deb.debian.org/debian trixie/main amd64 libblas3 amd64 3.12.1-6 [160 kB]
+Get:190 http://deb.debian.org/debian trixie/main amd64 libgfortran5 amd64 14.2.0-19 [836 kB]
+Get:191 http://deb.debian.org/debian trixie/main amd64 liblapack3 amd64 3.12.1-6 [2447 kB]
+Get:192 http://deb.debian.org/debian trixie/main amd64 libasyncns0 amd64 0.8-6+b5 [12.0 kB]
+Get:193 http://deb.debian.org/debian trixie/main amd64 libflac14 amd64 1.5.0+ds-2 [210 kB]
+Get:194 http://deb.debian.org/debian trixie/main amd64 libsndfile1 amd64 1.2.2-2+b1 [199 kB]
+Get:195 http://deb.debian.org/debian trixie/main amd64 libpulse0 amd64 17.0+dfsg1-2+b1 [276 kB]
+Get:196 http://deb.debian.org/debian trixie/main amd64 libsphinxbase3t64 amd64 0.8+5prealpha+1-21+b1 [121 kB]
+Get:197 http://deb.debian.org/debian trixie/main amd64 libpocketsphinx3 amd64 0.8+5prealpha+1-15+b4 [126 kB]
+Get:198 http://deb.debian.org/debian trixie/main amd64 libpostproc58 amd64 7:7.1.3-0+deb13u1 [88.3 kB]
+Get:199 http://deb.debian.org/debian trixie/main amd64 libfftw3-double3 amd64 3.3.10-2+b1 [781 kB]
+Get:200 http://deb.debian.org/debian trixie/main amd64 libsamplerate0 amd64 0.2.2-4+b2 [950 kB]
+Get:201 http://deb.debian.org/debian trixie/main amd64 librubberband2 amd64 3.3.0+dfsg-2+b3 [142 kB]
+Get:202 http://deb.debian.org/debian trixie/main amd64 libswscale8 amd64 7:7.1.3-0+deb13u1 [233 kB]
+Get:203 http://deb.debian.org/debian trixie/main amd64 libvidstab1.1 amd64 1.1.0-2+b2 [38.9 kB]
+Get:204 http://deb.debian.org/debian trixie/main amd64 libzimg2 amd64 3.0.5+ds1-1+b2 [244 kB]
+Get:205 http://deb.debian.org/debian trixie/main amd64 libavfilter10 amd64 7:7.1.3-0+deb13u1 [4109 kB]
+Get:206 http://deb.debian.org/debian trixie/main amd64 libslang2 amd64 2.3.3-5+b2 [549 kB]
+Get:207 http://deb.debian.org/debian trixie/main amd64 libcaca0 amd64 0.99.beta20-5 [202 kB]
+Get:208 http://deb.debian.org/debian trixie/main amd64 libcdio19t64 amd64 2.2.0-4 [61.3 kB]
+Get:209 http://deb.debian.org/debian trixie/main amd64 libcdio-cdda2t64 amd64 10.2+2.0.2-1+b1 [17.7 kB]
+Get:210 http://deb.debian.org/debian trixie/main amd64 libcdio-paranoia2t64 amd64 10.2+2.0.2-1+b1 [17.4 kB]
+Get:211 http://deb.debian.org/debian trixie/main amd64 libusb-1.0-0 amd64 2:1.0.28-1 [59.6 kB]
+Get:212 http://deb.debian.org/debian trixie/main amd64 libdc1394-25 amd64 2.2.6-5 [111 kB]
+Get:213 http://deb.debian.org/debian trixie/main amd64 libglvnd0 amd64 1.7.0-1+b2 [52.0 kB]
+Get:214 http://deb.debian.org/debian trixie/main amd64 libxcb-glx0 amd64 1.17.0-2+b1 [122 kB]
+Get:215 http://deb.debian.org/debian trixie/main amd64 libxcb-present0 amd64 1.17.0-2+b1 [106 kB]
+Get:216 http://deb.debian.org/debian trixie/main amd64 libxcb-xfixes0 amd64 1.17.0-2+b1 [109 kB]
+Get:217 http://deb.debian.org/debian trixie/main amd64 libxxf86vm1 amd64 1:1.1.4-1+b4 [19.3 kB]
+Get:218 http://deb.debian.org/debian trixie/main amd64 libdrm-amdgpu1 amd64 2.4.124-2 [22.6 kB]
+Get:219 http://deb.debian.org/debian trixie/main amd64 libpciaccess0 amd64 0.17-3+b3 [51.9 kB]
+Get:220 http://deb.debian.org/debian trixie/main amd64 libdrm-intel1 amd64 2.4.124-2 [64.1 kB]
+Get:221 http://deb.debian.org/debian trixie/main amd64 libelf1t64 amd64 0.192-4 [189 kB]
+Get:222 http://deb.debian.org/debian trixie/main amd64 libedit2 amd64 3.1-20250104-1 [93.8 kB]
+Get:223 http://deb.debian.org/debian trixie/main amd64 libz3-4 amd64 4.13.3-1 [8560 kB]
+Get:224 http://deb.debian.org/debian trixie/main amd64 libllvm19 amd64 1:19.1.7-3+b1 [26.0 MB]
+Get:225 http://deb.debian.org/debian trixie/main amd64 libsensors-config all 1:3.6.2-2 [16.2 kB]
+Get:226 http://deb.debian.org/debian trixie/main amd64 libsensors5 amd64 1:3.6.2-2 [37.5 kB]
+Get:227 http://deb.debian.org/debian trixie/main amd64 libxcb-randr0 amd64 1.17.0-2+b1 [117 kB]
+Get:228 http://deb.debian.org/debian trixie/main amd64 libxcb-sync1 amd64 1.17.0-2+b1 [109 kB]
+Get:229 http://deb.debian.org/debian trixie/main amd64 libxshmfence1 amd64 1.3.3-1 [10.9 kB]
+Get:230 http://deb.debian.org/debian trixie/main amd64 mesa-libgallium amd64 25.0.7-2 [9629 kB]
+Get:231 http://deb.debian.org/debian trixie/main amd64 libwayland-server0 amd64 1.23.1-3 [34.4 kB]
+Get:232 http://deb.debian.org/debian trixie/main amd64 libgbm1 amd64 25.0.7-2 [44.4 kB]
+Get:233 http://deb.debian.org/debian trixie/main amd64 libgl1-mesa-dri amd64 25.0.7-2 [46.1 kB]
+Get:234 http://deb.debian.org/debian trixie/main amd64 libglx-mesa0 amd64 25.0.7-2 [143 kB]
+Get:235 http://deb.debian.org/debian trixie/main amd64 libglx0 amd64 1.7.0-1+b2 [34.9 kB]
+Get:236 http://deb.debian.org/debian trixie/main amd64 libgl1 amd64 1.7.0-1+b2 [89.5 kB]
+Get:237 http://deb.debian.org/debian trixie/main amd64 libiec61883-0 amd64 1.2.0-7 [30.6 kB]
+Get:238 http://deb.debian.org/debian trixie/main amd64 libjack-jackd2-0 amd64 1.9.22~dfsg-4 [287 kB]
+Get:239 http://deb.debian.org/debian trixie/main amd64 libopenal-data all 1:1.24.2-1 [168 kB]
+Get:240 http://deb.debian.org/debian trixie/main amd64 libopenal1 amd64 1:1.24.2-1 [637 kB]
+Get:241 http://deb.debian.org/debian trixie/main amd64 libwayland-client0 amd64 1.23.1-3 [26.8 kB]
+Get:242 http://deb.debian.org/debian trixie/main amd64 libdecor-0-0 amd64 0.2.2-2 [15.5 kB]
+Get:243 http://deb.debian.org/debian trixie/main amd64 libwayland-cursor0 amd64 1.23.1-3 [11.9 kB]
+Get:244 http://deb.debian.org/debian trixie/main amd64 libwayland-egl1 amd64 1.23.1-3 [5860 B]
+Get:245 http://deb.debian.org/debian trixie/main amd64 libxcursor1 amd64 1:1.2.3-1 [39.7 kB]
+Get:246 http://deb.debian.org/debian trixie/main amd64 xkb-data all 2.42-1 [790 kB]
+Get:247 http://deb.debian.org/debian trixie/main amd64 libxkbcommon0 amd64 1.7.0-2 [113 kB]
+Get:248 http://deb.debian.org/debian trixie/main amd64 libxrandr2 amd64 2:1.5.4-1+b3 [36.3 kB]
+Get:249 http://deb.debian.org/debian trixie/main amd64 libxss1 amd64 1:1.2.3-1+b3 [17.0 kB]
+Get:250 http://deb.debian.org/debian trixie/main amd64 libsdl2-2.0-0 amd64 2.32.4+dfsg-1 [669 kB]
+Get:251 http://deb.debian.org/debian trixie/main amd64 libxcb-shape0 amd64 1.17.0-2+b1 [106 kB]
+Get:252 http://deb.debian.org/debian trixie/main amd64 libxv1 amd64 2:1.0.11-1.1+b3 [23.4 kB]
+Get:253 http://deb.debian.org/debian trixie/main amd64 libavdevice61 amd64 7:7.1.3-0+deb13u1 [119 kB]
+Get:254 http://deb.debian.org/debian trixie/main amd64 ffmpeg amd64 7:7.1.3-0+deb13u1 [1995 kB]
+Get:255 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+Get:256 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+Get:257 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+Get:258 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+Get:259 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+Get:260 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+Get:261 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+
+Get:262 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+Get:263 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+Get:264 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+Get:265 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+Get:266 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+Get:267 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+Get:268 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u1 [58.5 kB]
+Get:269 http://deb.debian.org/debian trixie/main amd64 linux-libc-dev all 6.12.63-1 [2720 kB]
+Get:270 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+Get:271 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+Get:272 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u1 [1994 kB]
+Get:273 http://deb.debian.org/debian trixie/main amd64 libstdc++-14-dev amd64 14.2.0-19 [2376 kB]
+Get:274 http://deb.debian.org/debian trixie/main amd64 g++-14-x86-64-linux-gnu amd64 14.2.0-19 [12.1 MB]
+Get:275 http://deb.debian.org/debian trixie/main amd64 g++-14 amd64 14.2.0-19 [22.5 kB]
+Get:276 http://deb.debian.org/debian trixie/main amd64 g++-x86-64-linux-gnu amd64 4:14.2.0-1 [1200 B]
+Get:277 http://deb.debian.org/debian trixie/main amd64 g++ amd64 4:14.2.0-1 [1344 B]
+Get:278 http://deb.debian.org/debian trixie/main amd64 i965-va-driver amd64 2.4.1+dfsg1-2 [315 kB]
+Get:279 http://deb.debian.org/debian trixie/main amd64 libigdgmm12 amd64 22.7.2+ds1-1 [176 kB]
+Get:280 http://deb.debian.org/debian trixie/main amd64 intel-media-va-driver amd64 25.2.3+dfsg1-1 [3438 kB]
+Get:281 http://deb.debian.org/debian trixie/main amd64 libgpg-error0 amd64 1.51-4 [82.1 kB]
+Get:282 http://deb.debian.org/debian trixie/main amd64 libgcrypt20 amd64 1.11.0-7 [843 kB]
+Get:283 http://deb.debian.org/debian trixie/main amd64 libaacs0 amd64 0.11.1-4+b1 [58.5 kB]
+Get:284 http://deb.debian.org/debian trixie/main amd64 libatk1.0-0t64 amd64 2.56.2-1+deb13u1 [52.0 kB]
+Get:285 http://deb.debian.org/debian trixie/main amd64 libatk-bridge2.0-0t64 amd64 2.56.2-1+deb13u1 [68.4 kB]
+Get:286 http://deb.debian.org/debian trixie/main amd64 libavahi-common-data amd64 0.8-16 [112 kB]
+Get:287 http://deb.debian.org/debian trixie/main amd64 libavahi-common3 amd64 0.8-16 [44.2 kB]
+Get:288 http://deb.debian.org/debian trixie/main amd64 libavahi-client3 amd64 0.8-16 [48.4 kB]
+Get:289 http://deb.debian.org/debian trixie/main amd64 libbdplus0 amd64 0.2.0-4+b1 [54.9 kB]
+Get:290 http://deb.debian.org/debian trixie/main amd64 libcloudproviders0 amd64 0.3.6-2 [29.2 kB]
+Get:291 http://deb.debian.org/debian trixie/main amd64 libcolord2 amd64 1.4.7-3 [139 kB]
+Get:292 http://deb.debian.org/debian trixie/main amd64 libjson-c5 amd64 0.18+ds-1 [46.0 kB]
+Get:293 http://deb.debian.org/debian trixie/main amd64 libcryptsetup12 amd64 2:2.7.5-2 [254 kB]
+Get:294 http://deb.debian.org/debian trixie/main amd64 libcups2t64 amd64 2.4.10-3+deb13u2 [252 kB]
+Get:295 http://deb.debian.org/debian trixie/main amd64 libepoxy0 amd64 1.5.10-2 [193 kB]
+Get:296 http://deb.debian.org/debian trixie/main amd64 libxcomposite1 amd64 1:0.4.6-1 [16.3 kB]
+Get:297 http://deb.debian.org/debian trixie/main amd64 libxdamage1 amd64 1:1.1.6-1+b2 [15.5 kB]
+Get:298 http://deb.debian.org/debian trixie/main amd64 libxinerama1 amd64 2:1.1.4-3+b4 [16.0 kB]
+Get:299 http://deb.debian.org/debian trixie/main amd64 libgtk-3-common all 3.24.49-3 [4908 kB]
+Get:300 http://deb.debian.org/debian trixie/main amd64 libgtk-3-0t64 amd64 3.24.49-3 [2769 kB]
+Get:301 http://deb.debian.org/debian trixie/main amd64 libdecor-0-plugin-1-gtk amd64 0.2.2-2 [22.7 kB]
+Get:302 http://deb.debian.org/debian trixie/main amd64 libgdk-pixbuf2.0-bin amd64 2.42.12+dfsg-4 [18.8 kB]
+Get:303 http://deb.debian.org/debian trixie/main amd64 libglib2.0-data all 2.84.4-3~deb13u2 [1286 kB]
+Get:304 http://deb.debian.org/debian trixie/main amd64 libgpg-error-l10n all 1.51-4 [114 kB]
+Get:305 http://deb.debian.org/debian trixie/main amd64 libgtk-3-bin amd64 3.24.49-3 [86.5 kB]
+Get:306 http://deb.debian.org/debian trixie/main amd64 libkmod2 amd64 34.2-2 [63.2 kB]
+Get:307 http://deb.debian.org/debian trixie/main amd64 librsvg2-common amd64 2.60.0+dfsg-1 [154 kB]
+Get:308 http://deb.debian.org/debian trixie/main amd64 libvdpau-va-gl1 amd64 0.4.2-2 [74.3 kB]
+Get:309 http://deb.debian.org/debian trixie/main amd64 manpages-dev all 6.9.1-1 [2122 kB]
+Get:310 http://deb.debian.org/debian trixie/main amd64 mesa-va-drivers amd64 25.0.7-2 [19.9 kB]
+Get:311 http://deb.debian.org/debian trixie/main amd64 mesa-vdpau-drivers amd64 25.0.7-2 [20.1 kB]
+Get:312 http://deb.debian.org/debian trixie/main amd64 mesa-vulkan-drivers amd64 25.0.7-2 [14.2 MB]
+Get:313 http://deb.debian.org/debian trixie/main amd64 pocketsphinx-en-us all 0.8+5prealpha+1-15 [24.3 MB]
+Get:314 http://deb.debian.org/debian trixie/main amd64 psmisc amd64 23.7-2 [267 kB]
+Get:315 http://deb.debian.org/debian trixie/main amd64 systemd-cryptsetup amd64 257.9-1~deb13u1 [173 kB]
+Get:316 http://deb.debian.org/debian trixie/main amd64 va-driver-all amd64 2.22.0-3 [14.9 kB]
+Get:317 http://deb.debian.org/debian trixie/main amd64 vdpau-driver-all amd64 1.5-3+b1 [4704 B]
+Get:318 http://deb.debian.org/debian trixie/main amd64 xdg-user-dirs amd64 0.18-2 [53.2 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 318.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Preconfiguring packages ...
+
+ERROR: The command failed with an unexpected error. Here is the traceback:
+ERROR: 'charmap' codec can't encode character '\u2192' in position 2013: character maps to <undefined>
+Traceback (most recent call last):
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\knack/cli.py", line 233, in invoke
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/core/commands/__init__.py", 
+line 666, in execute
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/core/commands/__init__.py", 
+line 734, in _run_jobs_serially
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/core/commands/__init__.py", 
+line 703, in _run_job
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/core/commands/__init__.py", 
+line 336, in __call__
+  File 
+"D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/core/commands/command_operation.py", 
+line 120, in handler
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/command_modules/acr/build.py", 
+line 149, in acr_build
+  File 
+"D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/command_modules/acr/_stream_utils.py", 
+line 56, in stream_logs
+  File 
+"D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\azure/cli/command_modules/acr/_stream_utils.py", 
+line 126, in _stream_logs
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\colorama/ansitowin32.py", line 47, in 
+write
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\colorama/ansitowin32.py", line 177, in 
+write
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\colorama/ansitowin32.py", line 205, in 
+write_and_convert
+  File "D:\a\_work\1\s\build_scripts\windows\artifacts\cli\Lib\site-packages\colorama/ansitowin32.py", line 210, in 
+write_plain_text
+  File "encodings\cp1252.py", line 19, in encode
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 2013: character maps to <undefined>
+To check existing issues, please visit: https://github.com/Azure/azure-cli/issues
